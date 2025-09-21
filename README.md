@@ -317,46 +317,55 @@ poetry run pytest tests/test_specific.py -v
 
 ## 📚 Usage Examples
 
-### 1 Initial Conversation
-from app.services.mcp import ConversationService
+1. **Initial Conversation**
 
-conversation_service = ConversationService()
-conversation = await conversation_service.create_conversation(
-    db=db,
-    title="Integration Planning Session",
-)
-response = await conversation_service.generate_response(
-    db=db,
-    conversation_id=conversation.id,
-    user_message="I need to integrate our CRM with our email marketing platform",
-)
-print(response.content)  # AI response with integration recommendations
+    ```python
+    from app.services.mcp import ConversationService
 
-### 2 Knowledge Graph Queries
-from app.services.knowledge import EntityService
-from app.models.knowledge import EntityType  # import the enumeration
+    conversation_service = ConversationService()
+    conversation = await conversation_service.create_conversation(
+        db=db,
+        title="Integration Planning Session",
+    )
+    response = await conversation_service.generate_response(
+        db=db,
+        conversation_id=conversation.id,
+        user_message="I need to integrate our CRM with our email marketing platform",
+    )
+    print(response.content)  # AI response with integration recommendations
+    ```
 
-entity_service = EntityService()
-entities = await entity_service.search_entities(
-    db=db,
-    query="customer data synchronization",
-    entity_type=EntityType.BUSINESS_OBJECT,
-)
-for entity in entities:
-    print(f"Found: {entity.name} – {entity.description}")
+2. **Knowledge Graph Queries**
 
-### 3 Generate Integration Code
-from app.services.codegen import CodeGenerator
-from app.models.integration import IntegrationType  # import the enumeration
+    ```python
+    from app.services.knowledge import EntityService
+    from app.models.knowledge import EntityType  # import the enumeration
 
-generator = CodeGenerator()
-result = await generator.generate_integration_code(
-    specification="Sync customer data from Salesforce to HubSpot when accounts are created",
-    integration_type=IntegrationType.SYNC,
-    source_system={"name": "Salesforce", "type": "crm"},
-    target_system={"name": "HubSpot", "type": "crm"},
-)
-print(result["code"])  # Generated Python integration code
+    entity_service = EntityService()
+    entities = await entity_service.search_entities(
+        db=db,
+        query="customer data synchronization",
+        entity_type=EntityType.BUSINESS_OBJECT,
+    )
+    for entity in entities:
+        print(f"Found: {entity.name} – {entity.description}")
+    ```
+
+3. **Generate Integration Code**
+
+    ```python
+    from app.services.codegen import CodeGenerator
+    from app.models.integration import IntegrationType  # import the enumeration
+
+    generator = CodeGenerator()
+    result = await generator.generate_integration_code(
+        specification="Sync customer data from Salesforce to HubSpot when accounts are created",
+        integration_type=IntegrationType.SYNC,
+        source_system={"name": "Salesforce", "type": "crm"},
+        target_system={"name": "HubSpot", "type": "crm"},
+    )
+    print(result["code"])  # Generated Python integration code
+    ```
 
 ## 🔍 Troubleshooting
 
