@@ -2,6 +2,8 @@
 
 > Enterprise-grade AI-powered integration platform that transforms natural language requirements into production-ready integration code.
 
+> **Note:** This repository contains a research prototype; while the architecture is intended for enterprise‑grade integrations, some components are still experimental or under  development. Users are encouraged to experiment, contribute and provide feedback, but the system should not yet be considered a drop‑in production solution.
+
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
