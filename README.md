@@ -317,54 +317,46 @@ poetry run pytest tests/test_specific.py -v
 
 ## 📚 Usage Examples
 
-### 1. Generate Integration Code
-```python
+### 1 Initial Conversation
+from app.services.mcp import ConversationService
+
+conversation_service = ConversationService()
+conversation = await conversation_service.create_conversation(
+    db=db,
+    title="Integration Planning Session",
+)
+response = await conversation_service.generate_response(
+    db=db,
+    conversation_id=conversation.id,
+    user_message="I need to integrate our CRM with our email marketing platform",
+)
+print(response.content)  # AI response with integration recommendations
+
+### 2 Knowledge Graph Queries
+from app.services.knowledge import EntityService
+from app.models.knowledge import EntityType  # import the enumeration
+
+entity_service = EntityService()
+entities = await entity_service.search_entities(
+    db=db,
+    query="customer data synchronization",
+    entity_type=EntityType.BUSINESS_OBJECT,
+)
+for entity in entities:
+    print(f"Found: {entity.name} – {entity.description}")
+
+### 3 Generate Integration Code
 from app.services.codegen import CodeGenerator
+from app.models.integration import IntegrationType  # import the enumeration
 
 generator = CodeGenerator()
 result = await generator.generate_integration_code(
     specification="Sync customer data from Salesforce to HubSpot when accounts are created",
     integration_type=IntegrationType.SYNC,
     source_system={"name": "Salesforce", "type": "crm"},
-    target_system={"name": "HubSpot", "type": "crm"}
+    target_system={"name": "HubSpot", "type": "crm"},
 )
-
 print(result["code"])  # Generated Python integration code
-```
-
-### 2. AI Conversation
-```python
-from app.services.mcp import ConversationService
-
-conversation_service = ConversationService()
-conversation = await conversation_service.create_conversation(
-    db=db,
-    title="Integration Planning Session"
-)
-
-response = await conversation_service.generate_response(
-    db=db,
-    conversation_id=conversation.id,
-    user_message="I need to integrate our CRM with our email marketing platform"
-)
-
-print(response.content)  # AI response with integration recommendations
-```
-
-### 3. Knowledge Graph Queries
-```python
-from app.services.knowledge import EntityService
-
-entity_service = EntityService()
-entities = await entity_service.search_entities(
-    db=db,
-    query="customer data synchronization",
-    entity_type=EntityType.BUSINESS_OBJECT
-)
-
-for entity in entities:
-    print(f"Found: {entity.name} - {entity.description}")
-```
 
 ## 🔍 Troubleshooting
 
@@ -427,6 +419,24 @@ make dev
 5. Commit changes: `git commit -m 'Add amazing feature'`
 6. Push to branch: `git push origin feature/amazing-feature`
 7. Open a Pull Request
+
+## Third‑Party Services and Dependencies
+
+This project is released under the MIT Licence
+. The code in this repository is permissively licensed, but it relies on several external services and open‑source components that have their own licences and terms of use. When deploying or extending this platform, you are responsible for complying with the terms of these providers:
+
+Anthropic – Used for Claude‑family LLMs to generate responses and integration code. Access requires an Anthropic API key and agreement to Anthropic’s service terms.
+
+OpenAI – Used for GPT models and embedding services. You’ll need an OpenAI API key and must adhere to OpenAI’s usage policies.
+
+Neo4j – Provides the graph database backend for storing and querying the knowledge graph. Neo4j is distributed under the GPLv3 licence; see Neo4j licensing
+ for details.
+
+FastAPI – The web server framework powering the API layer. FastAPI is released under the MIT licence.
+
+Qdrant – Supplies vector storage and similarity search capabilities. Qdrant is distributed under the Apache 2.0 licence.
+
+These external tools are not bundled with this repository; you will need to provision access and API keys as appropriate. Your rights and obligations with respect to these services are determined by their individual licences and terms of use, not by this project’s MIT licence.
 
 ## 📄 License
 
