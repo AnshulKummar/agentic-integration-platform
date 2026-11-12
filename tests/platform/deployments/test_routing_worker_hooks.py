@@ -38,7 +38,11 @@ async def test_dispatch_routes_canary_share_to_new_version(
     dep = await service.start(tenant_id=tenant.id, actor_id="e", integration_id=integ.id, version_id=v2.id)
     await service.run_to_rest(tenant.id, dep.id)
     counts = await send_events(integ, 200)
-    assert 80 <= counts["canary"] <= 120  # canary_percent=50 in these tests
+    # Exact: every event goes where the deterministic split says (canary_percent=50 in these tests).
+    expected = sum(routes_to_canary(integ.id, f"evt-{i}", 50) for i in range(200))
+    assert counts["canary"] == expected
+    # Loose sanity on the split itself: +/-5 sigma of Binomial(200, 0.5) (the integration id is random per run).
+    assert 65 <= counts["canary"] <= 135
     by_stage = {(v, s) for v, s, _ in runner.calls if s in ("canary", "production")}
     assert by_stage == {(v2.id, "canary"), (v1.id, "production")}
     # A redelivered event goes to the same version.
