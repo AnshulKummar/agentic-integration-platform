@@ -1,0 +1,106 @@
+[
+  {
+    "id": "hl-sf-opportunity-to-ds-envelope",
+    "source": "crm-sf/Opportunity", "target": "esign-ds/envelope",
+    "sequence": "hl-crm-esign", "step": 1,
+    "tags": {"difficulty": "medium", "category": "contract", "vendor_family": "salesforce-style->docusign-style"},
+    "notes": "Send the contract to the primary contact; the opportunity owner is copied.",
+    "gold": [
+      {"target": "emailSubject", "source": "Name", "transform": "concat"},
+      {"target": "recipients.signers[].email", "source": "Primary_Contact__r.Email"},
+      {"target": "recipients.signers[].name", "source": "Primary_Contact__r.Name"},
+      {"target": "recipients.carbonCopies[].email", "source": "Owner.Email"},
+      {"target": "recipients.carbonCopies[].name", "source": "Owner.Name"},
+      {"target": "customFields.textCustomFields[].value", "source": "Id"},
+      {"target": "recipients.signers[].routingOrder", "source": null},
+      {"target": "templateId", "source": null},
+      {"target": "status", "source": null},
+      {"target": "emailBlurb", "source": null},
+      {"target": "expirations.expireAfter", "source": null},
+      {"target": "envelopeId", "source": null}
+    ]
+  },
+  {
+    "id": "hl-ds-envelope-to-sf-opportunity",
+    "source": "esign-ds/envelope", "target": "crm-sf/Opportunity",
+    "sequence": "hl-crm-esign", "step": 2,
+    "tags": {"difficulty": "medium", "category": "contract", "vendor_family": "docusign-style->salesforce-style"},
+    "notes": "Signature status write-back on envelope events.",
+    "gold": [
+      {"target": "Envelope_Id__c", "source": "envelopeId"},
+      {"target": "Signature_Status__c", "source": "status", "transform": "enum_map"},
+      {"target": "Is_Signed__c", "source": "status", "transform": "enum_map"},
+      {"target": "Signed_Date__c", "source": "completedDateTime", "transform": "date_format"},
+      {"target": "Envelope_Sent_Date__c", "source": "sentDateTime", "transform": "date_format"},
+      {"target": "Signer_Email__c", "source": "recipients.signers[].email", "transform": "first_item"},
+      {"target": "Signed_Document_URL__c", "source": "documentsUri"},
+      {"target": "Last_Signature_Sync__c", "source": null}
+    ]
+  },
+  {
+    "id": "hl-hs-deal-to-ds-envelope",
+    "source": "crm-hs/Deal", "target": "esign-ds/envelope",
+    "sequence": "hl-crm-esign", "step": 3,
+    "tags": {"difficulty": "hard", "category": "contract", "vendor_family": "hubspot-style->docusign-style"},
+    "notes": "Owner name/email must be resolved from the owner id.",
+    "gold": [
+      {"target": "emailSubject", "source": "properties.dealname", "transform": "concat"},
+      {"target": "recipients.signers[].email", "source": "properties.primary_contact_email"},
+      {"target": "recipients.signers[].name", "source": "properties.primary_contact_name"},
+      {"target": "recipients.carbonCopies[].email", "source": "properties.hubspot_owner_id", "transform": "lookup"},
+      {"target": "recipients.carbonCopies[].name", "source": "properties.hubspot_owner_id", "transform": "lookup"},
+      {"target": "customFields.textCustomFields[].value", "source": "id"},
+      {"target": "templateId", "source": null},
+      {"target": "status", "source": null},
+      {"target": "emailBlurb", "source": null},
+      {"target": "envelopeId", "source": null},
+      {"target": "recipients.signers[].routingOrder", "source": null}
+    ]
+  },
+  {
+    "id": "hl-as-agreement-to-st-customer",
+    "source": "esign-as/agreement", "target": "billing-st/customer",
+    "sequence": "hl-esign-billing", "step": 1,
+    "tags": {"difficulty": "hard", "category": "customer", "vendor_family": "adobesign-style->stripe-style"},
+    "notes": "Signed order form creates the billing customer. externalId holds an opportunity id, not an account id.",
+    "gold": [
+      {"target": "name", "source": "formData.company_legal_name"},
+      {"target": "email", "source": "formData.billing_contact_email"},
+      {"target": "address.line1", "source": "formData.billing_street"},
+      {"target": "address.city", "source": "formData.billing_city"},
+      {"target": "address.state", "source": "formData.billing_state"},
+      {"target": "address.postal_code", "source": "formData.billing_zip"},
+      {"target": "address.country", "source": "formData.billing_country", "transform": "country_name_to_iso2"},
+      {"target": "tax_id_data[].value", "source": "formData.tax_id"},
+      {"target": "metadata.crm_account_id", "source": null},
+      {"target": "phone", "source": null},
+      {"target": "shipping.address.city", "source": null},
+      {"target": "tax_exempt", "source": null},
+      {"target": "preferred_locales[]", "source": null},
+      {"target": "id", "source": null}
+    ]
+  },
+  {
+    "id": "hl-as-agreement-to-qb-invoice",
+    "source": "esign-as/agreement", "target": "acct-qb/Invoice",
+    "sequence": "hl-esign-billing", "step": 2,
+    "tags": {"difficulty": "hard", "category": "invoice", "vendor_family": "adobesign-style->quickbooks-style"},
+    "gold": [
+      {"target": "CustomerRef.value", "source": "formData.company_legal_name", "transform": "lookup"},
+      {"target": "TxnDate", "source": "formData.start_date", "transform": "date_format"},
+      {"target": "Line[].Amount", "source": "formData.contract_value", "transform": "to_number"},
+      {"target": "Line[].Description", "source": "formData.subscription_plan"},
+      {"target": "CurrencyRef.value", "source": "formData.currency"},
+      {"target": "SalesTermRef.value", "source": "formData.payment_terms", "transform": "lookup"},
+      {"target": "BillEmail.Address", "source": "formData.billing_contact_email"},
+      {"target": "BillAddr.Line1", "source": "formData.billing_street"},
+      {"target": "BillAddr.City", "source": "formData.billing_city"},
+      {"target": "DocNumber", "source": null},
+      {"target": "DueDate", "source": null},
+      {"target": "Line[].SalesItemLineDetail.ItemRef.value", "source": null},
+      {"target": "Line[].SalesItemLineDetail.Qty", "source": null},
+      {"target": "Line[].DetailType", "source": null},
+      {"target": "Id", "source": null}
+    ]
+  }
+]
