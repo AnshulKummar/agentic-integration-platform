@@ -1,0 +1,1064 @@
+{
+  "schema_version": 1,
+  "kind": "curve",
+  "suite": "all",
+  "predictor": "live_llm_kg",
+  "seed": 1234,
+  "options": {
+    "family_retrieval": true,
+    "n_sequences": 8,
+    "length": 6
+  },
+  "git_sha": "809562d1a2bb9f0c94354cdd1f1beec6d618d744",
+  "created_at": "2026-11-12T21:50:01.255463+00:00",
+  "results": {
+    "synthetic": {
+      "sequences": 8,
+      "steps": 6,
+      "by_step": [
+        {
+          "step": 1,
+          "n": 8,
+          "mean_edits_on": 0.0,
+          "mean_edits_off": 0.0,
+          "mean_diff": 0.0,
+          "diff_ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_cum_on": 0.0,
+          "mean_cum_off": 0.0,
+          "mean_f1_on": 1.0,
+          "mean_f1_off": 1.0,
+          "mean_reuse_on": 0.0
+        },
+        {
+          "step": 2,
+          "n": 8,
+          "mean_edits_on": 0.0,
+          "mean_edits_off": 0.0,
+          "mean_diff": 0.0,
+          "diff_ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_cum_on": 0.0,
+          "mean_cum_off": 0.0,
+          "mean_f1_on": 1.0,
+          "mean_f1_off": 1.0,
+          "mean_reuse_on": 0.0536
+        },
+        {
+          "step": 3,
+          "n": 8,
+          "mean_edits_on": 0.0,
+          "mean_edits_off": 0.0,
+          "mean_diff": 0.0,
+          "diff_ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_cum_on": 0.0,
+          "mean_cum_off": 0.0,
+          "mean_f1_on": 1.0,
+          "mean_f1_off": 1.0,
+          "mean_reuse_on": 0.0635
+        },
+        {
+          "step": 4,
+          "n": 8,
+          "mean_edits_on": 0.0,
+          "mean_edits_off": 0.0,
+          "mean_diff": 0.0,
+          "diff_ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_cum_on": 0.0,
+          "mean_cum_off": 0.0,
+          "mean_f1_on": 1.0,
+          "mean_f1_off": 1.0,
+          "mean_reuse_on": 0.0434
+        },
+        {
+          "step": 5,
+          "n": 8,
+          "mean_edits_on": 0.0,
+          "mean_edits_off": 0.0,
+          "mean_diff": 0.0,
+          "diff_ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_cum_on": 0.0,
+          "mean_cum_off": 0.0,
+          "mean_f1_on": 1.0,
+          "mean_f1_off": 1.0,
+          "mean_reuse_on": 0.1337
+        },
+        {
+          "step": 6,
+          "n": 8,
+          "mean_edits_on": 0.0,
+          "mean_edits_off": 0.0,
+          "mean_diff": 0.0,
+          "diff_ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_cum_on": 0.0,
+          "mean_cum_off": 0.0,
+          "mean_f1_on": 1.0,
+          "mean_f1_off": 1.0,
+          "mean_reuse_on": 0.2311
+        }
+      ],
+      "total": {
+        "mean_cum_edits_on": 0.0,
+        "mean_cum_edits_off": 0.0,
+        "mean_diff": 0.0,
+        "diff_ci95": [
+          0.0,
+          0.0
+        ],
+        "relative_reduction": 0.0
+      },
+      "compounding": {
+        "diff_slope_per_step": 0.0,
+        "slope_ci95": [
+          0.0,
+          0.0
+        ],
+        "mean_diff_first_half": 0.0,
+        "mean_diff_second_half": 0.0
+      },
+      "step1_identical": true,
+      "runs": [
+        {
+          "sequence": "syn-seq00-customer-hub_target",
+          "cases": [
+            "syn-seq00-customer-hub_target-s1",
+            "syn-seq00-customer-hub_target-s2",
+            "syn-seq00-customer-hub_target-s3",
+            "syn-seq00-customer-hub_target-s4",
+            "syn-seq00-customer-hub_target-s5",
+            "syn-seq00-customer-hub_target-s6"
+          ],
+          "edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.0,
+            0.2857,
+            0.0,
+            0.125,
+            0.0
+          ],
+          "transform_edits_on": [
+            0,
+            0,
+            0,
+            0,
+            2,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "sequence": "syn-seq01-contact-hub_source",
+          "cases": [
+            "syn-seq01-contact-hub_source-s1",
+            "syn-seq01-contact-hub_source-s2",
+            "syn-seq01-contact-hub_source-s3",
+            "syn-seq01-contact-hub_source-s4",
+            "syn-seq01-contact-hub_source-s5",
+            "syn-seq01-contact-hub_source-s6"
+          ],
+          "edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.1111,
+            0.2857
+          ],
+          "transform_edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "sequence": "syn-seq02-opportunity-hub_target",
+          "cases": [
+            "syn-seq02-opportunity-hub_target-s1",
+            "syn-seq02-opportunity-hub_target-s2",
+            "syn-seq02-opportunity-hub_target-s3",
+            "syn-seq02-opportunity-hub_target-s4",
+            "syn-seq02-opportunity-hub_target-s5",
+            "syn-seq02-opportunity-hub_target-s6"
+          ],
+          "edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.0,
+            0.0,
+            0.2222,
+            0.0,
+            0.125
+          ],
+          "transform_edits_on": [
+            0,
+            0,
+            0,
+            2,
+            2,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            2,
+            0,
+            1,
+            2,
+            2
+          ]
+        },
+        {
+          "sequence": "syn-seq03-contract-hub_source",
+          "cases": [
+            "syn-seq03-contract-hub_source-s1",
+            "syn-seq03-contract-hub_source-s2",
+            "syn-seq03-contract-hub_source-s3",
+            "syn-seq03-contract-hub_source-s4",
+            "syn-seq03-contract-hub_source-s5",
+            "syn-seq03-contract-hub_source-s6"
+          ],
+          "edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.4286,
+            0.0,
+            0.0,
+            0.0,
+            0.5556
+          ],
+          "transform_edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "sequence": "syn-seq04-invoice-hub_target",
+          "cases": [
+            "syn-seq04-invoice-hub_target-s1",
+            "syn-seq04-invoice-hub_target-s2",
+            "syn-seq04-invoice-hub_target-s3",
+            "syn-seq04-invoice-hub_target-s4",
+            "syn-seq04-invoice-hub_target-s5",
+            "syn-seq04-invoice-hub_target-s6"
+          ],
+          "edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.25,
+            0.2857
+          ],
+          "transform_edits_on": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "transform_edits_off": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "sequence": "syn-seq05-payment-hub_source",
+          "cases": [
+            "syn-seq05-payment-hub_source-s1",
+            "syn-seq05-payment-hub_source-s2",
+            "syn-seq05-payment-hub_source-s3",
+            "syn-seq05-payment-hub_source-s4",
+            "syn-seq05-payment-hub_source-s5",
+            "syn-seq05-payment-hub_source-s6"
+          ],
+          "edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.1111
+          ],
+          "transform_edits_on": [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            0,
+            1,
+            0,
+            3,
+            1
+          ]
+        },
+        {
+          "sequence": "syn-seq06-address-hub_target",
+          "cases": [
+            "syn-seq06-address-hub_target-s1",
+            "syn-seq06-address-hub_target-s2",
+            "syn-seq06-address-hub_target-s3",
+            "syn-seq06-address-hub_target-s4",
+            "syn-seq06-address-hub_target-s5",
+            "syn-seq06-address-hub_target-s6"
+          ],
+          "edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.0,
+            0.2222,
+            0.125,
+            0.3333,
+            0.375
+          ],
+          "transform_edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "transform_edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "sequence": "syn-seq07-line_item-hub_source",
+          "cases": [
+            "syn-seq07-line_item-hub_source-s1",
+            "syn-seq07-line_item-hub_source-s2",
+            "syn-seq07-line_item-hub_source-s3",
+            "syn-seq07-line_item-hub_source-s4",
+            "syn-seq07-line_item-hub_source-s5",
+            "syn-seq07-line_item-hub_source-s6"
+          ],
+          "edits_on": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.25,
+            0.1111
+          ],
+          "transform_edits_on": [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "handlabeled": {
+      "sequences": 8,
+      "steps": 3,
+      "by_step": [
+        {
+          "step": 1,
+          "n": 8,
+          "mean_edits_on": 0.375,
+          "mean_edits_off": 0.25,
+          "mean_diff": -0.125,
+          "diff_ci95": [
+            -0.375,
+            0.0
+          ],
+          "mean_cum_on": 0.375,
+          "mean_cum_off": 0.25,
+          "mean_f1_on": 0.975,
+          "mean_f1_off": 0.9711,
+          "mean_reuse_on": 0.0
+        },
+        {
+          "step": 2,
+          "n": 8,
+          "mean_edits_on": 0.75,
+          "mean_edits_off": 0.75,
+          "mean_diff": 0.0,
+          "diff_ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_cum_on": 1.125,
+          "mean_cum_off": 1.0,
+          "mean_f1_on": 0.9411,
+          "mean_f1_off": 0.9411,
+          "mean_reuse_on": 0.1176
+        },
+        {
+          "step": 3,
+          "n": 3,
+          "mean_edits_on": 0.0,
+          "mean_edits_off": 1.0,
+          "mean_diff": 1.0,
+          "diff_ci95": [
+            0.0,
+            3.0
+          ],
+          "mean_cum_on": 1.3333,
+          "mean_cum_off": 2.0,
+          "mean_f1_on": 1.0,
+          "mean_f1_off": 0.9091,
+          "mean_reuse_on": 0.0909
+        }
+      ],
+      "total": {
+        "mean_cum_edits_on": 1.125,
+        "mean_cum_edits_off": 1.375,
+        "mean_diff": 0.25,
+        "diff_ci95": [
+          0.0,
+          0.75
+        ],
+        "relative_reduction": 0.1818
+      },
+      "compounding": {
+        "diff_slope_per_step": 0.4674,
+        "slope_ci95": [
+          0.0,
+          1.1786
+        ],
+        "mean_diff_first_half": -0.125,
+        "mean_diff_second_half": 0.2727
+      },
+      "step1_identical": false,
+      "runs": [
+        {
+          "sequence": "hl-billing-accounting",
+          "cases": [
+            "hl-st-charge-to-qb-payment",
+            "hl-st-invoice-to-qb-invoice"
+          ],
+          "edits_on": [
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.2
+          ],
+          "transform_edits_on": [
+            0,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            0
+          ]
+        },
+        {
+          "sequence": "hl-crm-accounting",
+          "cases": [
+            "hl-sf-account-to-qb-customer",
+            "hl-sf-opportunity-to-qb-invoice"
+          ],
+          "edits_on": [
+            0,
+            1
+          ],
+          "edits_off": [
+            0,
+            1
+          ],
+          "f1_on": [
+            1.0,
+            0.96
+          ],
+          "f1_off": [
+            1.0,
+            0.96
+          ],
+          "reuse_on": [
+            0.0,
+            0.1538
+          ],
+          "transform_edits_on": [
+            1,
+            0
+          ],
+          "transform_edits_off": [
+            1,
+            0
+          ]
+        },
+        {
+          "sequence": "hl-crm-billing",
+          "cases": [
+            "hl-sf-account-to-st-customer",
+            "hl-sf-opportunity-to-st-invoice",
+            "hl-sf-contact-to-st-customer"
+          ],
+          "edits_on": [
+            0,
+            1,
+            0
+          ],
+          "edits_off": [
+            0,
+            1,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            0.8889,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            0.8889,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.1111,
+            0.2727
+          ],
+          "transform_edits_on": [
+            0,
+            1,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "sequence": "hl-crm-erp",
+          "cases": [
+            "hl-sf-account-to-ns-customer",
+            "hl-sf-opportunity-to-ns-salesorder",
+            "hl-ns-customer-to-sf-account"
+          ],
+          "edits_on": [
+            0,
+            0,
+            0
+          ],
+          "edits_off": [
+            0,
+            0,
+            0
+          ],
+          "f1_on": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reuse_on": [
+            0.0,
+            0.3333,
+            0.0
+          ],
+          "transform_edits_on": [
+            0,
+            0,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "sequence": "hl-crm-esign",
+          "cases": [
+            "hl-sf-opportunity-to-ds-envelope",
+            "hl-ds-envelope-to-sf-opportunity",
+            "hl-hs-deal-to-ds-envelope"
+          ],
+          "edits_on": [
+            3,
+            0,
+            0
+          ],
+          "edits_off": [
+            2,
+            0,
+            3
+          ],
+          "f1_on": [
+            0.8,
+            1.0,
+            1.0
+          ],
+          "f1_off": [
+            0.7692,
+            1.0,
+            0.7273
+          ],
+          "reuse_on": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "transform_edits_on": [
+            1,
+            1,
+            0
+          ],
+          "transform_edits_off": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "sequence": "hl-crm2-billing",
+          "cases": [
+            "hl-hs-company-to-st-customer",
+            "hl-hs-deal-to-st-invoice"
+          ],
+          "edits_on": [
+            0,
+            1
+          ],
+          "edits_off": [
+            0,
+            1
+          ],
+          "f1_on": [
+            1.0,
+            0.8571
+          ],
+          "f1_off": [
+            1.0,
+            0.8571
+          ],
+          "reuse_on": [
+            0.0,
+            0.1429
+          ],
+          "transform_edits_on": [
+            0,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            0
+          ]
+        },
+        {
+          "sequence": "hl-esign-billing",
+          "cases": [
+            "hl-as-agreement-to-st-customer",
+            "hl-as-agreement-to-qb-invoice"
+          ],
+          "edits_on": [
+            0,
+            2
+          ],
+          "edits_off": [
+            0,
+            2
+          ],
+          "f1_on": [
+            1.0,
+            0.9
+          ],
+          "f1_off": [
+            1.0,
+            0.9
+          ],
+          "reuse_on": [
+            0.0,
+            0.0
+          ],
+          "transform_edits_on": [
+            0,
+            0
+          ],
+          "transform_edits_off": [
+            0,
+            0
+          ]
+        },
+        {
+          "sequence": "hl-to-tax",
+          "cases": [
+            "hl-sf-opportunity-to-av-transaction",
+            "hl-st-invoice-to-av-transaction"
+          ],
+          "edits_on": [
+            0,
+            1
+          ],
+          "edits_off": [
+            0,
+            1
+          ],
+          "f1_on": [
+            1.0,
+            0.9231
+          ],
+          "f1_off": [
+            1.0,
+            0.9231
+          ],
+          "reuse_on": [
+            0.0,
+            0.0
+          ],
+          "transform_edits_on": [
+            0,
+            1
+          ],
+          "transform_edits_off": [
+            0,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "llm": {
+    "model": "claude-opus-5-5",
+    "calls": 134,
+    "input_tokens": 263134,
+    "output_tokens": 54960,
+    "cost_usd": 2.1517,
+    "cost_cap_usd": 10.0
+  }
+}

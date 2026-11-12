@@ -1,494 +1,314 @@
-# 🚀 Agentic Integration Platform
+# Agentic Integration Platform
 
-## DSI 2026 demo: self-improving knowledge graph
+**An AI agent that builds, ships and maintains your SaaS integrations, and remembers how *your* company does things.**
 
-**Live click-through:** https://anshulkummar.github.io/agentic-integration-platform/
+[Live click-through demo](https://anshulkummar.github.io/agentic-integration-platform/) · [Try it in 5 minutes](#try-it-in-5-minutes) · [Use it as a framework](#use-it-as-a-framework) · [Technical details](#technical-details-for-engineers)
 
-This fork adds a demo of the PMAIP paper. It has two loops: a PM's intent becomes a deployed integration and the KG learns from it, then a partner's new API is matched to the roadmap automatically and implemented by reusing what was learned.
+This repository accompanies the paper *Agentic integration of platform APIs for digital product management* (PMAIP), by Shiv Yadav, Anshul Kumar and Nitin Joglekar (DSI 2026). It contains:
 
-| Part | Path | Run |
-|---|---|---|
-| Click-through UI (static, GitHub Pages) | `demo/` | `cd demo && npm ci && npm run dev` |
-| Runnable agent backend (no databases needed) | `app/demo/` | see below |
-
-```bash
-# Python 3.12 venv
-py -3.12 -m venv .venv-demo
-.venv-demo/Scripts/python.exe -m pip install -r requirements-demo.txt
-
-# Run both loops in the terminal (scripted; add --live with ANTHROPIC_API_KEY set, --no-learning for the ablation)
-.venv-demo/Scripts/python.exe app/demo/run.py all
-
-# HTTP API on :8000 (/demo/state, /demo/run/loop1, ...)
-.venv-demo/Scripts/python.exe app/demo/run.py serve --port 8000
-
-# Tests
-.venv-demo/Scripts/python.exe -m pytest -c tests/demo/pytest.ini tests/demo
-```
+- the clickable demo shown at the conference;
+- a working, multi-tenant platform that implements the paper's ideas end to end;
+- the evaluation data behind every number below.
 
 ---
 
-> Enterprise-grade AI-powered integration platform that transforms natural language requirements into production-ready integration code.
+## The problem
 
-> **Note:** This repository contains a research prototype; while the architecture is intended for enterprise‑grade integrations, some components are still experimental or under  development. Users are encouraged to experiment, contribute and provide feedback, but the system should not yet be considered a drop‑in production solution.
+Every company's product depends on connecting SaaS tools: CRM, billing, ERP, e-signature, tax, and more. Today that work is:
 
-[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+- **Slow.** A product manager writes a ticket. An engineer reads two vendors' API docs, maps fields by hand, writes glue code, tests it and ships it, often weeks later.
+- **Fragile.** Vendors change their APIs. Deprecated fields silently break integrations, and roadmap items stay blocked until someone notices that a new API version unblocks them.
+- **Dependent on tribal knowledge.** "Our ERP wants the *legal* company name, not the display name." "Never sync the sales rep; the ERP assigns it." "Field `UDF_07` is our sales region." These rules live in people's heads and get re-learned, or re-broken, on every integration.
 
-## ✨ Features
+## What the platform does
 
-- **🤖 AI-Powered Code Generation**: Generate production-ready integration code from natural language specifications
-- **🧠 Knowledge Graph Integration**: Semantic understanding of systems, entities, and relationships using Neo4j
-- **💬 Model Context Protocol (MCP)**: Persistent conversational context across integration sessions
-- **🔄 Multi-Provider AI Support**: Anthropic Claude, OpenAI GPT, and extensible architecture
-- **🔍 Semantic Validation**: AI-powered code quality, security, and performance analysis
-- **📚 Pattern Learning**: Learn from successful integrations to improve future generations
-- **🏭 Production Ready**: Comprehensive logging, monitoring, error handling, and security
-- **🔌 Extensible Architecture**: Plugin system for new AI providers and integration types
-- **🌐 RESTful API**: FastAPI with automatic OpenAPI documentation
-- **🔒 Security First**: Built-in security scanning, authentication, and authorization
+| For the… | The agent… |
+|---|---|
+| **Product manager** | turns a plain-English intent ("connect CRM to billing so closed-won accounts become customers, with tax") into a reviewable integration. |
+| **Engineer** | gets a draft with field mappings, runnable code, risks and tests. They correct only what is wrong; every correction is remembered. |
+| **Both** | must approve (product *and* engineering) before anything ships. The author can't approve their own work. |
+| **Operations** | sees every release go sandbox → staging → canary → production, guarded by real health checks. A vendor outage triggers an **automatic rollback**. |
+| **The roadmap** | is watched continuously. When a vendor ships a new API version, the agent works out what changed, flags deprecated fields, finds the roadmap item it unblocks and **drafts that integration on its own**. |
 
-## 🚀 Quick Start
+## The knowledge graph: your company's integration memory
 
-### Option 1: Smart Installer (Recommended)
+The knowledge graph (KG) is what turns a generic AI agent into one that knows how *your company* does things. It stores:
+
+| What it knows | Example in a company |
+|---|---|
+| Your systems, business objects and fields | CRM `Account`, Billing `Customer`, ERP `SalesOrder` |
+| Your roadmap and what blocks it | "Contract-to-cash is blocked until e-signature has a *completed* event" |
+| Reusable integration patterns | how CRM→billing integrations are built here |
+| **Your reviewed decisions and house rules** | "customer name = legal registered name", "annual value excludes tax", "`UDF_07` holds the sales region", "sales rep is assigned by the ERP, leave it empty" |
+| API changes and deprecations | "`Envelope.signer_email` is replaced by `Agreement.signers[].email`" |
+
+How it gets used:
+
+1. **Every human review teaches it.** When an engineer fixes a mapping, that decision becomes a fact in the KG. No training run, no prompt engineering.
+2. **The next integration starts from what the company already decided.** The platform's drafting agent reuses the learned patterns and rules, so the same correction isn't needed twice. In the evals we also gave these reviewed facts to Claude as context; that is the experiment measured below, and it isn't yet wired into the platform's drafting endpoint (see [Limitations](#limitations)).
+3. **It is per company.** Each customer org has its own KG, so one company's conventions never leak into another's.
+4. **It is auditable.** Every fact traces back to a reviewed, approved, deployed integration, and learning can be switched off per company.
+
+### What we measured
+
+All numbers come from the eval suite in this repo (`app/platform/evals`). The run reports, including cost and token counts, are in [`reports/evals/`](reports/evals). Edits are the field-mapping corrections a human reviewer has to make.
+
+| Question | Result |
+|---|---|
+| How good is a classic name-matching approach? | **18.5%** of fields right on realistic cases (12 corrections per integration). |
+| How good is the LLM agent alone (Claude)? | **97.1%** on realistic cases (0.5 corrections per integration), about **23× fewer corrections**. Its confidence scores can be trusted: every mapping it rated ≥ 0.8 was correct. |
+| Does the KG help on things the LLM already knows, such as public-API field meanings? | **No measurable difference.** There is nothing left to fix. |
+| **Does the KG teach the agent a company's own conventions?** | **Yes.** Without the KG the agent gets company-specific fields right about half the time: **3.7 mistakes per integration**, the same on every integration. With the KG, after **one** reviewed integration it drops to **0.4, then 0.0, 0.25 and 0.0** on the next ones. That saves **3.5 corrections per integration** (95% CI 3.3–3.7). Fields the LLM already knew were unaffected. |
+
+The company-conventions experiment was pre-registered: its design and success criterion were committed before any run (`app/platform/evals/conventions.py`). Its limitations are stated plainly:
+
+- The conventions were synthetic and perfectly consistent; real companies have exceptions and drift.
+- One model and one human labeler were used.
+- The learning is "learn the house rule after one review", not a curve that keeps compounding.
+
+All the live LLM runs together cost about **$5**.
+
+### A day in the life (the demo's two loops)
+
+1. **Loop 1, intent-driven:**
+   - A PM asks for CRM → billing with tax.
+   - The agent drafts 6 mappings and the code.
+   - An engineer fixes 3 (currency format, payment terms, tax jurisdiction).
+   - Product and engineering approve.
+   - It ships through canary to production.
+   - The KG learns the pattern and the 3 rules.
+2. **Loop 2, agent-initiated:**
+   - The e-signature vendor releases API v3.0.
+   - The agent diffs the spec and flags a deprecated field.
+   - It sees that the release unblocks the *Contract-to-cash* roadmap item (fit 0.91).
+   - It drafts that integration itself, with **7 of 9 mappings reused from what the engineer taught it**.
+   - It waits for approval.
+
+With learning switched off, the same draft reuses 0.
+
+### Is it production-ready?
+
+It is a **deploy-ready reference implementation**, not a hardened product.
+
+**Done:**
+- Login and roles.
+- Tenant isolation, including PostgreSQL row-level security.
+- Encrypted secrets.
+- Sandboxed code execution: a Docker backend with no network access.
+- Staged deploys with automatic rollback.
+- Metrics, alerts and dashboards.
+- Migrations and CI.
+
+**Not yet:**
+- An admin web console (it's API-only for now).
+- Connections to real vendor sandboxes (it uses realistic simulators).
+- Load testing, a penetration test or a compliance audit.
+- Login rate limiting shared across instances.
+- Outbound URL allow-listing to guard against SSRF.
+
+See [Limitations](#limitations).
+
+---
+
+## Try it in 5 minutes
+
+You need **Python 3.12** and git. It's tested on 3.12; newer versions are untested. No Docker, database server or API key is required.
+
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/AnshulKummar/agentic-integration-platform.git
 cd agentic-integration-platform
-
-# Install with smart dependency management
-make install
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your API keys (see Configuration section)
-
-# Start development server
-make dev
-
-# Visit API documentation
-open http://localhost:8000/docs
+python -m venv .venv
+# Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
+pip install -r requirements-platform.txt
 ```
-
-### Option 2: Manual Installation
-```bash
-# Install dependencies without ML features (faster)
-make install-no-root
-
-# Or install with ML features (PyTorch, sentence-transformers)
-make install-ml
-```
-
-## 🏗️ Architecture
-
-The platform implements a layered architecture with:
-
-- **🌐 API Layer**: FastAPI with async support and automatic documentation
-- **⚙️ Service Layer**: Business logic, AI orchestration, and integration management
-- **💾 Data Layer**: PostgreSQL, Neo4j (knowledge graph), Redis (caching), Qdrant (vectors)
-- **🤖 AI Layer**: Multi-provider LLM integration with prompt management
-- **🧠 Knowledge Layer**: Graph-based semantic understanding and pattern learning
-- **💬 MCP Layer**: Conversational context management and session persistence
-
-## 📋 Prerequisites
-
-### Required
-- **Python 3.12+**
-- **Poetry** (for dependency management)
-
-### Optional (for full functionality)
-- **PostgreSQL** (database)
-- **Redis** (caching)
-- **Neo4j** (knowledge graph)
-- **Qdrant** (vector search)
-
-## 🛠️ Installation Guide
-
-### Step 1: Install Dependencies
 
 ```bash
-# Smart installer (handles PyTorch compatibility issues)
-make install
-
-# When prompted about ML features:
-# - Choose 'N' for quick setup (recommended)
-# - Choose 'Y' only if you need local embeddings
+python -m app.platform.quickstart
 ```
 
-### Step 2: Configure Environment
+The walkthrough runs the real code paths:
+- sign-up and roles;
+- encrypted vendor credentials;
+- connectors generated from each vendor's OpenAPI spec;
+- loop 1 deployed through the sandbox to production against vendor simulators over real HTTP;
+- the KG learning from it;
+- loop 2 drafted by the agent.
+
+It takes about 10 seconds. Time is simulated for the canary windows; everything else is real.
 
 ```bash
-# Copy example environment file
-cp .env.example .env
-
-# Edit with your configuration
-nano .env  # or code .env, vim .env, etc.
+python -m app.platform.quickstart --no-learning
 ```
 
-**Essential Configuration:**
-```env
-# AI Services (add at least one)
-ANTHROPIC_API_KEY=your_anthropic_key_here
-OPENAI_API_KEY=your_openai_key_here
-
-# Default AI settings
-DEFAULT_LLM_PROVIDER=anthropic
-DEFAULT_MODEL=claude-3-5-sonnet-20241022
-
-# Database (required)
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/agentic_integration
-
-# Security (required)
-SECRET_KEY=your-super-secret-key-here
-JWT_SECRET_KEY=another-secret-key-here
-
-# Optional services
-REDIS_URL=redis://localhost:6379/0
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=password
-QDRANT_HOST=localhost
-QDRANT_PORT=6333
-```
-
-### Step 3: Set Up External Services (Optional)
-
-#### PostgreSQL (Recommended)
-```bash
-# Using Docker
-docker run --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:15
-
-# Or install locally on macOS
-brew install postgresql
-brew services start postgresql
-```
-
-#### Neo4j (For Knowledge Graph)
-```bash
-# Using Docker
-docker run --name neo4j -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/password -d neo4j:latest
-
-# Access Neo4j Browser at http://localhost:7474
-```
-
-#### Qdrant (For Vector Search)
-```bash
-# Using Docker
-docker run --name qdrant -p 6333:6333 -d qdrant/qdrant
-```
-
-#### Redis (For Caching)
-```bash
-# Using Docker
-docker run --name redis -p 6379:6379 -d redis:alpine
-
-# Or install locally on macOS
-brew install redis
-brew services start redis
-```
-
-### Step 4: Start the Platform
-
-```bash
-# Start development server
-make dev
-
-# The server will start at http://localhost:8000
-```
-
-### Step 5: Explore the Platform
-
-- 🌐 **API Documentation**: http://localhost:8000/docs
-- 🔍 **Health Check**: http://localhost:8000/health
-- 📊 **Metrics**: http://localhost:8000/metrics
-- 🧠 **Neo4j Browser**: http://localhost:7474 (if Neo4j is running)
-
-## ⚙️ Configuration Reference
-
-### Core Settings
-```env
-# Application
-APP_NAME=Agentic Integration Platform
-DEBUG=true
-LOG_LEVEL=INFO
-
-# Database
-DATABASE_URL=postgresql+asyncpg://user:pass@host:port/dbname
-
-# AI Providers
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-DEFAULT_LLM_PROVIDER=anthropic  # or openai
-DEFAULT_MODEL=claude-3-5-sonnet-20241022
-
-# Security
-SECRET_KEY=your-secret-key
-JWT_SECRET_KEY=your-jwt-secret
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# External Services
-REDIS_URL=redis://localhost:6379/0
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=password
-QDRANT_HOST=localhost
-QDRANT_PORT=6333
-
-# Embeddings
-EMBEDDING_MODEL=all-MiniLM-L6-v2
-VECTOR_DIMENSION=384
-USE_OPENAI_EMBEDDINGS=false  # Set to true if no local ML
-```
-
-## 🔧 Development
-
-### Available Commands
-```bash
-# Installation
-make install              # Smart installer
-make install-no-root      # Install without current project
-make install-ml           # Install with ML dependencies
-
-# Development
-make dev                  # Start development server
-make dev-reload           # Start with auto-reload
-make shell               # Interactive Python shell
-
-# Code Quality
-make format              # Format code with Black
-make lint                # Lint with Ruff
-make type-check          # Type checking with MyPy
-make security-check      # Security scan with Bandit
-
-# Testing
-make test                # Run all tests
-make test-unit           # Run unit tests only
-make test-integration    # Run integration tests
-make test-coverage       # Run tests with coverage
-
-# Database
-make db-upgrade          # Run database migrations
-make db-downgrade        # Rollback migrations
-make db-reset            # Reset database
-
-# Docker
-make docker-build        # Build Docker image
-make docker-run          # Run in Docker
-make docker-compose-up   # Start all services
-```
-
-### Project Structure
-```
-agentic-integration-platform/
-├── app/                          # Main application code
-│   ├── api/                      # FastAPI routes and endpoints
-│   ├── core/                     # Core utilities and configuration
-│   ├── models/                   # SQLAlchemy database models
-│   ├── services/                 # Business logic services
-│   │   ├── ai/                   # AI service integrations
-│   │   ├── codegen/              # Code generation engine
-│   │   ├── knowledge/            # Knowledge graph services
-│   │   └── mcp/                  # Model Context Protocol
-│   └── database/                 # Database configuration
-├── alembic/                      # Database migrations
-├── tests/                        # Test suite
-├── docker/                       # Docker configurations
-├── docs/                         # Documentation
-└── scripts/                      # Utility scripts
-```
-
-## 🚀 Deployment
-
-### Docker Deployment
-```bash
-# Build production image
-make docker-build
-
-# Run with Docker Compose
-make docker-compose-up
-
-# Or deploy to production
-make deploy-production
-```
-
-### Environment-Specific Deployment
-```bash
-# Development
-make deploy-dev
-
-# Staging
-make deploy-staging
-
-# Production
-make deploy-production
-```
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-make test
-
-# Run specific test categories
-make test-unit
-make test-integration
-make test-e2e
-
-# Run with coverage
-make test-coverage
-
-# Run specific test file
-poetry run pytest tests/test_specific.py -v
-```
-
-## 📚 Usage Examples
-
-1. **Initial Conversation**
-
-    ```python
-    from app.services.mcp import ConversationService
-
-    conversation_service = ConversationService()
-    conversation = await conversation_service.create_conversation(
-        db=db,
-        title="Integration Planning Session",
-    )
-    response = await conversation_service.generate_response(
-        db=db,
-        conversation_id=conversation.id,
-        user_message="I need to integrate our CRM with our email marketing platform",
-    )
-    print(response.content)  # AI response with integration recommendations
-    ```
-
-2. **Knowledge Graph Queries**
-
-    ```python
-    from app.services.knowledge import EntityService
-    from app.models.knowledge import EntityType  # import the enumeration
-
-    entity_service = EntityService()
-    entities = await entity_service.search_entities(
-        db=db,
-        query="customer data synchronization",
-        entity_type=EntityType.BUSINESS_OBJECT,
-    )
-    for entity in entities:
-        print(f"Found: {entity.name} – {entity.description}")
-    ```
-
-3. **Generate Integration Code**
-
-    ```python
-    from app.services.codegen import CodeGenerator
-    from app.models.integration import IntegrationType  # import the enumeration
-
-    generator = CodeGenerator()
-    result = await generator.generate_integration_code(
-        specification="Sync customer data from Salesforce to HubSpot when accounts are created",
-        integration_type=IntegrationType.SYNC,
-        source_system={"name": "Salesforce", "type": "crm"},
-        target_system={"name": "HubSpot", "type": "crm"},
-    )
-    print(result["code"])  # Generated Python integration code
-    ```
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-#### 1. PyTorch Installation Fails
-```bash
-# Use the no-ML installation
-make install-no-root
-
-# Configure to use OpenAI embeddings instead
-echo "USE_OPENAI_EMBEDDINGS=true" >> .env
-```
-
-#### 2. Database Connection Issues
-```bash
-# Check PostgreSQL is running
-brew services list | grep postgresql
-
-# Reset database
-make db-reset
-```
-
-#### 3. Poetry Dependency Conflicts
-```bash
-# Clear Poetry cache
-poetry cache clear pypi --all
-
-# Remove lock file and reinstall
-rm poetry.lock
-poetry install --no-cache
-```
-
-#### 4. Port Already in Use
-```bash
-# Find process using port 8000
-lsof -i :8000
-
-# Kill the process
-kill -9 <PID>
-
-# Or use a different port
-export PORT=8001
-make dev
-```
-
-### Getting Help
-
-1. **Check the logs**: `tail -f logs/app.log`
-2. **Run health check**: `curl http://localhost:8000/health`
-3. **Check API docs**: http://localhost:8000/docs
-4. **Validate configuration**: `make validate-config`
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Run tests: `make test`
-5. Commit changes: `git commit -m 'Add amazing feature'`
-6. Push to branch: `git push origin feature/amazing-feature`
-7. Open a Pull Request
-
-## Third‑Party Services and Dependencies
-
-This project is released under the MIT Licence
-. The code in this repository is permissively licensed, but it relies on several external services and open‑source components that have their own licences and terms of use. When deploying or extending this platform, you are responsible for complying with the terms of these providers:
-
-Anthropic – Used for Claude‑family LLMs to generate responses and integration code. Access requires an Anthropic API key and agreement to Anthropic’s service terms.
-
-OpenAI – Used for GPT models and embedding services. You’ll need an OpenAI API key and must adhere to OpenAI’s usage policies.
-
-Neo4j – Provides the graph database backend for storing and querying the knowledge graph. Neo4j is distributed under the GPLv3 licence; see Neo4j licensing
- for details.
-
-FastAPI – The web server framework powering the API layer. FastAPI is released under the MIT licence.
-
-Qdrant – Supplies vector storage and similarity search capabilities. Qdrant is distributed under the Apache 2.0 licence.
-
-These external tools are not bundled with this repository; you will need to provision access and API keys as appropriate. Your rights and obligations with respect to these services are determined by their individual licences and terms of use, not by this project’s MIT licence.
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Anthropic** for Claude AI models
-- **OpenAI** for GPT models and embeddings
-- **Neo4j** for graph database technology
-- **FastAPI** for the excellent web framework
-- **Qdrant** for vector search capabilities
+This is the same story with KG learning off: loop 2 reuses nothing.
+
+More ways to explore:
+
+| What | Command |
+|---|---|
+| The API with interactive docs | `uvicorn app.platform.main:app`, then open http://127.0.0.1:8000/docs |
+| The conference click-through UI | `cd demo && npm ci && npm run dev` (or use the [live link](https://anshulkummar.github.io/agentic-integration-platform/)) |
+| The full stack (Postgres, worker, simulators, Prometheus, Grafana) | `cp .env.platform.example .env.platform`, fill it in, then `docker compose -f docker-compose.platform.yml --env-file .env.platform up --build` |
+| The mapping evals, free and deterministic | `python -m app.platform.evals run --suite all` |
+| The live LLM evals (needs `ANTHROPIC_API_KEY`; hard cost cap) | `PLATFORM_EVAL_COST_CAP_USD=5 python -m app.platform.evals run --predictor live_llm` |
+| The company-conventions KG experiment, about $2 | `python -m app.platform.evals conventions --replicates 3` |
 
 ---
 
-**Built with ❤️ by Shiv Yadav**
+## Use it as a framework
+
+The repo is meant to be cloned and adapted. These are the common extension points:
+
+| You want to… | Do this |
+|---|---|
+| **Connect a new SaaS vendor** | `PUT /v1/connections/{system}` with the vendor's OpenAPI spec and an auth config naming stored secrets (`api_key`, `bearer` or `oauth2_client_credentials`). Agent tools are generated from the spec automatically; retries, rate limits, paging and idempotency are handled. |
+| **Store vendor credentials** | `PUT /v1/secrets/{name}`. Secrets are write-only, envelope-encrypted per tenant, and only ever reach a connector at call time. |
+| **Seed your own systems and roadmap** | `POST /v1/kg/bootstrap` loads `app/demo/fixtures/seed.json`; replace it with your systems, objects, fields and roadmap. `/v1/roadmap` manages items. |
+| **Encode your house rules as a test** | Copy `app/platform/evals/conventions.py`, write your company's real conventions, and measure how many corrections the KG saves *you*. |
+| **Swap the LLM** | `PLATFORM_LLM_MODEL` (default `claude-opus-5-5`). |
+| **Use your cloud KMS** | Implement the `KeyProvider` protocol in `app/platform/secrets/crypto.py`. |
+| **Change the code sandbox** | Implement the `Sandbox` protocol in `app/platform/interfaces.py`, e.g. gVisor, Firecracker or Kubernetes Jobs. |
+| **Tune rollout safety** | `PLATFORM_CANARY_PERCENT`, `PLATFORM_CANARY_MAX_ERROR_RATE`, `PLATFORM_CANARY_MAX_P95_MS` and `PLATFORM_POST_DEPLOY_WATCH_S`. |
+| **Use a different identity provider** | Replace `current_principal` in `app/platform/principal.py`; every route depends only on it. |
+
+License: MIT (see [LICENSE](LICENSE)).
+
+---
+
+## Technical details (for engineers)
+
+### Architecture
+
+```mermaid
+flowchart LR
+  PM[PM / Engineer] -->|JWT, roles| API[FastAPI API]
+  Vendor[Vendor API release] -->|OpenAPI spec| API
+  API --> INT[Integration lifecycle<br/>draft · review · dual approval]
+  INT <--> KG[(Per-tenant<br/>knowledge graph)]
+  INT -.->|evals today| LLM[LLM agent<br/>Claude]
+  KG -.->|reviewed facts as context| LLM
+  API --> Q[(Durable job queue)]
+  Q --> W[Worker]
+  W --> DEP[Staged deploy<br/>sandbox → staging → canary → prod → watch]
+  DEP --> RUN[Runner]
+  RUN --> SBX[Sandbox<br/>no network, no secrets]
+  SBX -->|tool calls only| BRK[Tool broker<br/>allow-list]
+  BRK --> CON[Connectors<br/>auth · retries · rate limits]
+  CON --> SaaS[(CRM · Billing · e-Sign · Tax)]
+  CON -.-> SEC[(Envelope-encrypted secrets)]
+  DEP -->|health checks fail| RB[Automatic rollback]
+  DEP -->|goes live| KG
+  API & W --> OBS[JSON logs · Prometheus · Grafana · alerts]
+```
+
+### Repository map
+
+| Path | What it is |
+|---|---|
+| `app/platform/` | **The production platform** (the code this README describes). |
+| `app/platform/auth/` | Users, memberships, argon2 passwords, JWT + rotating refresh tokens with reuse detection, rate limiting, PostgreSQL row-level security. |
+| `app/platform/integrations/` | The two PMAIP loops: KG persistence, drafting from intent, review edits, dual approval with separation of duties, API-release ingestion, roadmap matching. |
+| `app/platform/secrets/` | AES-256-GCM envelope encryption, key rotation, log redaction. |
+| `app/platform/connectors/` | HTTP connectors generated from OpenAPI (REST → agent tools). |
+| `app/platform/sandbox/` | Runnable codegen, AST validator, tool broker, subprocess and Docker backends, runner. |
+| `app/platform/deployments/` | Stage machine, canary routing, health checks, auto-rollback, lifecycle hooks, job queue. |
+| `app/platform/observability/` | Structured logs, request IDs, Prometheus metrics, `/healthz`, `/readyz`, `/metrics`. |
+| `app/platform/evals/` | Datasets, predictors, metrics, learning curves, the conventions experiment, the CI gate. |
+| `app/platform/simulators/` | CRM, e-signature and billing simulators: OAuth, rate limits, signed webhooks, fault injection. |
+| `app/platform/quickstart.py` | The 5-minute walkthrough (also run as a test). |
+| `app/demo/` | Domain logic shared with the conference demo: schema alignment, mapping drafter, KG learning, OpenAPI diff. |
+| `demo/` | The click-through UI (React + Vite), deployed to GitHub Pages. |
+| `deploy/` | Prometheus, Alertmanager, Grafana and Postgres role setup. |
+| `reports/evals/` | Every eval report behind the numbers above. |
+| `app/api`, `app/services`, `frontend/`, … | The upstream project this was forked from (see [Origins](#origins)); not used by the platform. |
+
+### How a request flows
+
+1. **Auth:** a bearer JWT resolves to a `Principal`, scoped to one tenant. Every database session is bound to that tenant: reads are filtered automatically, cross-tenant writes are rejected, and PostgreSQL RLS is a third layer.
+2. **Drafting:**
+   - The tenant's KG is loaded, and the mapping drafter proposes mappings, reusing learned patterns and rules.
+   - The LLM path with reviewed KG facts as context is measured in `app/platform/evals` but not yet wired in here.
+   - The sandbox codegen renders the reviewable `def run(event, tools)` module, and the version's `allowed_tools` are derived from the same plan, so what is approved is exactly what runs.
+3. **Deploying:**
+   - The worker advances the stages. Each stage runs synthetic transactions in the sandbox, checks connector health, and evaluates error-rate and p95 limits on real executions; the canary is compared with the baseline.
+   - A breach fails the deploy before production, or rolls back during canary or the post-deploy watch.
+   - Going live fires the `on_live` hook, and the KG learns.
+4. **Executing:**
+   - Generated code runs in a child process or container with no network and no secrets.
+   - Its only way out is `tools.call(...)`, which reaches a host-side broker that enforces the allow-list and call budget and calls the connector with the tenant's decrypted credentials.
+
+### Security model (summary)
+
+- **Passwords and sessions:** argon2 password hashing; short-lived access tokens; refresh-token rotation with reuse detection.
+- **Approvals:** roles are admin, PM, engineer and viewer. Approvals require separation of duties.
+- **Tenant isolation:** enforced by the ORM, the repositories and PostgreSQL RLS. Another tenant's IDs return 404, never 403.
+- **Secrets:**
+  - Never returned or logged; redaction filters are active.
+  - Each value is encrypted with its own data key, bound to its tenant and name, and data keys are wrapped by a master key.
+- **Generated code:**
+  - Checked against an AST allow-list before it runs.
+  - Docker sandbox flags: `--network none --read-only --cap-drop ALL --user 65534 --pids-limit --memory`.
+  - The subprocess backend is for development only; production config refuses to start without Docker.
+- **Production safety:** production refuses unsafe config, such as missing secrets, SQLite, the subprocess sandbox, or auto-created schemas.
+
+### Configuration
+
+All settings are `PLATFORM_*` environment variables (`app/platform/config.py`). The important ones:
+
+| Variable | Default | Notes |
+|---|---|---|
+| `PLATFORM_ENV` | `development` | `production` enforces safe config. |
+| `PLATFORM_DATABASE_URL` | `sqlite+aiosqlite:///./platform.db` | Use `postgresql+asyncpg://…` in production. |
+| `PLATFORM_JWT_SECRET` / `PLATFORM_MASTER_KEY` | ephemeral in development | Required in production; see `.env.platform.example`. |
+| `PLATFORM_SANDBOX_BACKEND` | `subprocess` | Must be `docker` in production. |
+| `PLATFORM_CANARY_PERCENT` | `10` | Share of live events sent to the canary. |
+| `PLATFORM_LLM_MODEL` / `ANTHROPIC_API_KEY` | `claude-opus-5-5` / unset | Live LLM drafting and evals. |
+| `PLATFORM_EVAL_COST_CAP_USD` | `5.0` | Hard stop for live eval spend. |
+
+### Tests and CI
+
+```bash
+python -m pytest -c tests/platform/pytest.ini tests/platform   # 394 tests (+6 that need Docker/Postgres/API key)
+python -m pytest -c tests/demo/pytest.ini tests/demo           # 37 demo-backend tests
+cd demo && npm test                                            # 27 UI tests
+```
+
+The `Platform CI` workflow runs these jobs:
+- `ruff` and `mypy --strict`;
+- the full suite on SQLite and on PostgreSQL;
+- migrations up and down, including RLS;
+- the Docker sandbox tests;
+- the eval regression gate;
+- a production image build that must refuse unsafe config.
+
+### Evals: reproducing the numbers
+
+| Command | Measures | Cost |
+|---|---|---|
+| `python -m app.platform.evals run --suite all` | The deterministic baseline (name matching + KG patterns) | free |
+| `python -m app.platform.evals curve --suite all` | KG learning on vs off, deterministic | free |
+| `python -m app.platform.evals run --predictor live_llm` | Claude alone | about $1.3 |
+| `python -m app.platform.evals curve --predictor live_llm_kg` | Claude with vs without KG context | about $2.2 |
+| `python -m app.platform.evals conventions --replicates 3` | The pre-registered company-conventions test | about $1.8 |
+
+The suites:
+- **Synthetic:** 72 generated cases.
+- **Hand-labeled:** 19 cases and 318 labeled target fields, modelled on public CRM, ERP, e-signature and tax APIs.
+- **Conventions:** 4 companies × 5 integrations, each company with 6 house rules.
+
+### Limitations
+
+- **The headline LLM + KG results come from the eval harness.** The platform's `POST /v1/integrations` still drafts with the deterministic drafter plus KG patterns. Wiring the `live_llm_kg` predictor (Claude with reviewed KG facts as context) into drafting is the next step.
+- The LLM results are from one model, single runs per configuration (3 replicates for the conventions test), and a dataset with a single labeler.
+- The vendor APIs are simulated. Pointing connections at real vendor sandboxes is configuration, not code, but it hasn't been done here.
+- Synthetic deploy checks call whatever API a connection points at. Use vendor sandbox accounts for staging connections.
+- There is no web console for approvals yet; approvals happen through the API.
+- Several pieces are single-instance or missing:
+  - login rate limiting is in-memory per instance;
+  - there is no SSRF guard on connection URLs;
+  - there is no endpoint for creating version 2+ of an integration;
+  - a canary with very little traffic waits indefinitely.
+
+### Origins
+
+This is a fork of [shivyadavus/agentic-integration-platform](https://github.com/shivyadavus/agentic-integration-platform). The upstream README is preserved in [`docs/UPSTREAM_README.md`](docs/UPSTREAM_README.md). The PMAIP platform (`app/platform/`), the conference demo (`demo/`, `app/demo/`) and the evals were added for the DSI 2026 paper.

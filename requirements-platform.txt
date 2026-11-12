@@ -1,0 +1,15 @@
+# Production platform (app/platform). Includes the demo domain logic it builds on.
+# Install: .venv-demo/Scripts/python.exe -m pip install -r requirements-platform.txt
+-r requirements-demo.txt
+sqlalchemy[asyncio]==2.1.8
+greenlet==3.5.6
+alembic==1.20.1
+aiosqlite==0.22.1
+asyncpg==0.32.0
+argon2-cffi==25.1.0
+PyJWT==2.15.1
+cryptography==50.0.2
+prometheus-client==0.26.0
+# Dev / CI
+ruff==0.17.4
+mypy==2.4.1
