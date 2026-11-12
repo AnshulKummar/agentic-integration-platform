@@ -1,0 +1,100 @@
+groups:
+  - name: pmaip-integrations
+    rules:
+      - alert: IntegrationHighErrorRate
+        # Production + canary runs per integration, 5 min window, ignoring idle integrations.
+        expr: |
+          (
+            sum by (tenant, integration) (rate(pmaip_integration_executions_total{stage=~"production|canary",outcome="error"}[5m]))
+            /
+            sum by (tenant, integration) (rate(pmaip_integration_executions_total{stage=~"production|canary"}[5m]))
+          ) > 0.05
+          and
+          sum by (tenant, integration) (rate(pmaip_integration_executions_total{stage=~"production|canary"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "Integration {{ $labels.integration }} (tenant {{ $labels.tenant }}) error rate above 5%"
+          description: "Error rate {{ $value | humanizePercentage }} over 5m. Check recent deployments and connector health."
+
+      - alert: IntegrationP95LatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le, stage) (rate(pmaip_integration_execution_duration_seconds_bucket{stage=~"production|canary"}[10m]))
+          ) > 2
+        for: 10m
+        labels:
+          severity: warn
+        annotations:
+          summary: "Integration p95 latency above 2s (stage {{ $labels.stage }})"
+
+  - name: pmaip-deployments
+    rules:
+      - alert: DeploymentAutomaticRollback
+        # Any automatic rollback (canary or post-deploy watch breach, or health unverifiable).
+        expr: sum by (reason) (increase(pmaip_rollbacks_total{reason!="manual"}[10m])) > 0
+        labels:
+          severity: page
+        annotations:
+          summary: "Automatic rollback ({{ $labels.reason }})"
+          description: "A deployment was rolled back automatically. See GET /v1/deployments?status=rolled_back and the 'deployment rolled back' error log line."
+
+      - alert: DeploymentFailed
+        expr: increase(pmaip_deployments_total{outcome="failed"}[15m]) > 0
+        labels:
+          severity: warn
+        annotations:
+          summary: "A deployment failed its pre-production health gates"
+
+  - name: pmaip-platform
+    rules:
+      - alert: ApiHigh5xxRate
+        expr: |
+          sum(rate(pmaip_http_requests_total{status=~"5.."}[5m]))
+          /
+          sum(rate(pmaip_http_requests_total[5m])) > 0.02
+          and sum(rate(pmaip_http_requests_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "API 5xx rate above 2%"
+
+      - alert: ApiP95LatencyHigh
+        expr: |
+          histogram_quantile(0.95, sum by (le, route) (rate(pmaip_http_request_duration_seconds_bucket[5m]))) > 1
+        for: 10m
+        labels:
+          severity: warn
+        annotations:
+          summary: "API p95 latency above 1s on {{ $labels.route }}"
+
+      - alert: SandboxFailureSpike
+        expr: |
+          sum by (backend) (rate(pmaip_sandbox_runs_total{outcome!="ok"}[5m]))
+          /
+          sum by (backend) (rate(pmaip_sandbox_runs_total[5m])) > 0.2
+          and sum by (backend) (rate(pmaip_sandbox_runs_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "Sandbox ({{ $labels.backend }}) failure rate above 20%"
+
+      - alert: AuthFailureSpike
+        # Possible credential stuffing / brute force.
+        expr: sum(rate(pmaip_auth_events_total{outcome=~"fail.*|denied|error|rate_limited"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warn
+        annotations:
+          summary: "Authentication failures above 1/s"
+
+      - alert: ApiTargetDown
+        expr: up{job="pmaip-api"} == 0
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "PMAIP API target is down"
