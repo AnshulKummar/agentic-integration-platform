@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.platform import observability
+from app.platform import observability, runtime
 from app.platform.auth.router import router as auth_router
 from app.platform.config import PlatformSettings
 from app.platform.connectors.router import router as connectors_router
@@ -18,7 +18,9 @@ from app.platform.errors import install_error_handlers
 from app.platform.evals.router import router as evals_router
 from app.platform.integrations.router import router as integrations_router
 from app.platform.observability.router import router as observability_router
+from app.platform.secrets.redaction import install_redaction
 from app.platform.secrets.router import router as secrets_router
+from app.platform.secrets.store import DbSecretStore
 
 ROUTERS = (
     observability_router,
@@ -53,6 +55,8 @@ def create_app(settings: PlatformSettings | None = None) -> FastAPI:
     )
     app.state.settings = settings
     app.state.db = db
+    app.state.secret_store = DbSecretStore(db, settings)
+    runtime.install()
 
     if settings.cors_origins:
         app.add_middleware(
@@ -64,6 +68,7 @@ def create_app(settings: PlatformSettings | None = None) -> FastAPI:
         )
     install_error_handlers(app)
     observability.setup(app, settings)
+    install_redaction()
     for router in ROUTERS:
         app.include_router(router)
     return app

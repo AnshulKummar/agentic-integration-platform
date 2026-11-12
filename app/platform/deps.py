@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.platform.config import PlatformSettings
 from app.platform.db import Database, bind_tenant
+from app.platform.observability.context import set_log_tenant
 from app.platform.principal import Principal, current_principal
 
 
@@ -32,6 +33,7 @@ async def get_tenant_session(
     principal: Principal = Depends(current_principal), db: Database = Depends(get_database)
 ) -> AsyncIterator[AsyncSession]:
     """Session bound to the caller's tenant (auto-filtered reads, guarded writes)."""
+    set_log_tenant(principal.tenant_id, principal.user_id)
     async with db.session() as session:
         bind_tenant(session, principal.tenant_id)
         yield session

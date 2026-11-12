@@ -112,7 +112,15 @@ async def test_tenant_isolation_on_every_endpoint(
 
 
 async def test_unwired_runtime_returns_503(client, app, act_as, principal_for, tenant, make_integration) -> None:
+    from app.platform.deployments.deps import register_provider
+    from app.platform.runtime import install
+
+    register_provider(None)  # simulate a process where app.platform.runtime was never installed
+    app.state.deployment_deps = None
     integ = await make_integration(tenant)
     act_as(principal_for(tenant, Role.ENGINEER))
     r = await client.post(f"/v1/integrations/{integ.id}/events", json={"payload": {}})
-    assert r.status_code == 503 and r.json()["error"]["code"] == "deployments_unavailable"
+    try:
+        assert r.status_code == 503 and r.json()["error"]["code"] == "deployments_unavailable"
+    finally:
+        install()

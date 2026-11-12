@@ -161,12 +161,21 @@ async def test_graceful_stop_finishes_in_flight_job(db, settings, deps, clock) -
     assert done == [job_id] and (await _job(db, job_id)).status == JobStatus.SUCCEEDED
 
 
-async def test_worker_main_refuses_to_start_unwired(tmp_path) -> None:  # type: ignore[no-untyped-def]
+async def test_worker_main_refuses_to_start_unwired(tmp_path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from app.platform import runtime
+    from app.platform.deployments.deps import register_provider
     from app.platform.worker import amain
 
+    # Normally amain installs the runtime; simulate a build where it is missing.
+    monkeypatch.setattr(runtime, "install", lambda: None)
+    register_provider(None)
     env = {"PLATFORM_ENV": "test", "PLATFORM_DATABASE_URL": f"sqlite+aiosqlite:///{(tmp_path / 'w.db').as_posix()}"}
-    with pytest.raises(SystemExit, match="deployment runtime is not wired"):
-        await amain(env)
+    try:
+        with pytest.raises(SystemExit, match="deployment runtime is not wired"):
+            await amain(env)
+    finally:
+        monkeypatch.undo()
+        runtime.install()
 
 
 async def test_unknown_job_kind_is_dead_lettered(db, settings, deps, clock) -> None:

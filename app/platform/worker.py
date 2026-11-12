@@ -11,7 +11,7 @@ and delivers lifecycle hooks, by draining the durable ``jobs`` table.
   A dead-lettered deployment job aborts the deployment (fail / roll back).
 - SIGINT/SIGTERM: stop claiming, finish the in-flight job, exit.
 - Settings and Database come from the environment (``PLATFORM_*``); the runner
-  and connector factory come from ``deployments.deps.register_provider`` (wired at merge).
+  and connector factory come from ``app.platform.runtime`` (registered at startup).
 - Tests call ``Worker.run_once()`` in-process.
 """
 
@@ -30,6 +30,7 @@ from types import FrameType
 
 from prometheus_client import start_http_server
 
+from app.platform import runtime
 from app.platform.config import PlatformSettings
 from app.platform.db import Database
 from app.platform.deployments import jobs
@@ -40,6 +41,7 @@ from app.platform.deployments.service import DeploymentService
 from app.platform.observability.context import RequestContext, pop_context, push_context
 from app.platform.observability.logs import configure_logging
 from app.platform.observability.metrics import REGISTRY
+from app.platform.secrets.redaction import install_redaction
 
 log = logging.getLogger("app.platform.worker")
 
@@ -226,6 +228,8 @@ def install_signal_handlers(worker: Worker) -> None:
 async def amain(environ: Mapping[str, str] | None = None, *, metrics_port: int = 0) -> None:
     settings = PlatformSettings.from_env(dict(environ) if environ is not None else None).validate_runtime()
     configure_logging(settings.log_level, json_lines=settings.log_json)
+    install_redaction()
+    runtime.install()
     if metrics_port and settings.metrics_enabled:
         # Deployment/rollback/execution metrics are recorded in this process; serve them
         # for Prometheus (internal network only, like the API's /metrics).
