@@ -311,3 +311,7 @@ test-reports/
 
 # PMAIP demo backend virtualenv
 .venv-demo/
+
+# Platform local DB
+platform.db
+*.db-journal
