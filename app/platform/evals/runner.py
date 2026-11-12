@@ -19,7 +19,14 @@ from app.platform.config import PlatformSettings
 from app.platform.evals.dataset import EvalCase, Suite, dataset_stats, group_sequences, load_handlabeled
 from app.platform.evals.learning_curve import run_curve
 from app.platform.evals.metrics import CaseScore, aggregate, score_case
-from app.platform.evals.predictors import CostCapReached, LiveLLMPredictor, Predictor, make_predictor
+from app.platform.evals.predictors import (
+    CostCapReached,
+    CostTracker,
+    LiveLLMKGPredictor,
+    LiveLLMPredictor,
+    Predictor,
+    make_predictor,
+)
 from app.platform.evals.synthetic import DEFAULT_SEED, generate_sequences, generate_suite
 
 log = logging.getLogger(__name__)
@@ -83,6 +90,17 @@ def run_eval(suite: SuiteArg, predictor_name: str, *, seed: int = DEFAULT_SEED,
     shared: Predictor | None = None
     if predictor_name == "live_llm" and predictor_factory is None:
         shared = make_predictor("live_llm", settings)
+    cost: CostTracker | None = None
+    live_kg: list[LiveLLMKGPredictor] = []
+    if predictor_name == "live_llm_kg" and predictor_factory is None:
+        # A fresh KG per suite (synthetic never teaches hand-labeled), one cost cap for the run.
+        live_settings = settings or PlatformSettings.from_env()
+        cost = CostTracker(cap_usd=live_settings.eval_cost_cap_usd)
+
+        def predictor_factory() -> Predictor:
+            p = LiveLLMKGPredictor(live_settings, cost=cost, learning=True)
+            live_kg.append(p)
+            return p
     report: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "kind": "run",
@@ -113,11 +131,15 @@ def run_eval(suite: SuiteArg, predictor_name: str, *, seed: int = DEFAULT_SEED,
             report["stopped_early"] = f"{name}: {run.stopped_early}"
             break
     if isinstance(shared, LiveLLMPredictor):
-        c = shared.cost
-        report["llm"] = {"model": shared.model, "calls": c.calls, "input_tokens": c.input_tokens,
-                         "output_tokens": c.output_tokens, "cost_usd": round(c.spent_usd, 4),
-                         "cost_cap_usd": c.cap_usd}
+        report["llm"] = _llm_usage(shared.model, shared.cost)
+    elif cost is not None and live_kg:
+        report["llm"] = _llm_usage(live_kg[0].model, cost)
     return report
+
+
+def _llm_usage(model: str, c: CostTracker) -> dict[str, Any]:
+    return {"model": model, "calls": c.calls, "input_tokens": c.input_tokens, "output_tokens": c.output_tokens,
+            "cost_usd": round(c.spent_usd, 4), "cost_cap_usd": c.cap_usd}
 
 
 def curve_sequences(suite: SuiteArg, seed: int, n_sequences: int, length: int) -> dict[Suite, list[list[EvalCase]]]:
@@ -130,25 +152,48 @@ def curve_sequences(suite: SuiteArg, seed: int, n_sequences: int, length: int) -
 
 
 def run_learning_curve(suite: SuiteArg, *, seed: int = DEFAULT_SEED, n_sequences: int = 8, length: int = 6,
-                       family_retrieval: bool = True) -> dict[str, Any]:
+                       family_retrieval: bool = True, predictor: str = "kg_learning",
+                       settings: PlatformSettings | None = None) -> dict[str, Any]:
+    """Learning ON vs OFF over sequences of related cases.
+
+    ``predictor="live_llm_kg"``: Claude with vs without the KG of reviewed mappings
+    (OFF = an empty KG = plain live_llm prompt); one cost cap for the whole curve.
+    """
+    cost: CostTracker | None = None
+    live_settings: PlatformSettings | None = None
+    if predictor == "live_llm_kg":
+        live_settings = settings or PlatformSettings.from_env()
+        cost = CostTracker(cap_usd=live_settings.eval_cost_cap_usd)
+    elif predictor != "kg_learning":
+        raise ValueError(f"curve supports kg_learning or live_llm_kg, not {predictor!r}")
+
     def make(learning: bool) -> Predictor:
+        if live_settings is not None:
+            return LiveLLMKGPredictor(live_settings, cost=cost, learning=learning)
         return make_predictor("kg_learning", learning=learning, family_retrieval=family_retrieval)
 
     report: dict[str, Any] = {
-        "schema_version": SCHEMA_VERSION, "kind": "curve", "suite": suite, "predictor": "kg_learning",
+        "schema_version": SCHEMA_VERSION, "kind": "curve", "suite": suite, "predictor": predictor,
         "seed": seed, "options": {"family_retrieval": family_retrieval, "n_sequences": n_sequences,
                                   "length": length},
         "git_sha": git_sha(), "created_at": datetime.now(UTC).isoformat(), "results": {},
     }
     for name, seqs in curve_sequences(suite, seed, n_sequences, length).items():
-        report["results"][name] = run_curve(seqs, make, seed=seed)
-        if name == "synthetic":
+        try:
+            report["results"][name] = run_curve(seqs, make, seed=seed)
+        except CostCapReached as exc:
+            log.warning("evals.cost_cap_reached: %s", exc)
+            report["stopped_early"] = f"{name}: cost cap reached: {exc}"
+            break
+        if name == "synthetic" and predictor == "kg_learning":
             # The two regimes differ by construction: patterns are keyed on target labels, which recur only
             # when the target API is the fixed hub.
             for regime in ("hub_target", "hub_source"):
                 subset = [s for s in seqs if s and regime in (s[0].sequence or "")]
                 if subset:
                     report["results"][f"synthetic/{regime}"] = run_curve(subset, make, seed=seed)
+    if cost is not None and live_settings is not None:
+        report["llm"] = _llm_usage(live_settings.llm_model, cost)
     return report
 
 

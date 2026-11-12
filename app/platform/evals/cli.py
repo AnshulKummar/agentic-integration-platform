@@ -53,6 +53,7 @@ def _parser() -> argparse.ArgumentParser:
     curve.add_argument("--sequences", type=int, default=8)
     curve.add_argument("--length", type=int, default=6)
     curve.add_argument("--strict-retrieval", action="store_true")
+    curve.add_argument("--predictor", choices=("kg_learning", "live_llm_kg"), default="kg_learning")
     curve.add_argument("--out", type=Path)
 
     g = sub.add_parser("gate", help="fail (exit 1) if F1 or edits regress beyond the baseline tolerance")
@@ -102,7 +103,7 @@ def build_latest(seed: int) -> tuple[dict[str, Any], str]:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "run":
-        settings = PlatformSettings.from_env() if args.predictor == "live_llm" else None
+        settings = PlatformSettings.from_env() if args.predictor.startswith("live_llm") else None
         report = run_eval(args.suite, args.predictor, seed=args.seed, settings=settings,
                           family_retrieval=not args.strict_retrieval)
         print(run_markdown(report))
@@ -112,12 +113,13 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if report["stopped_early"] else 0
     if args.command == "curve":
         report = run_learning_curve(args.suite, seed=args.seed, n_sequences=args.sequences, length=args.length,
-                                    family_retrieval=not args.strict_retrieval)
+                                    family_retrieval=not args.strict_retrieval, predictor=args.predictor,
+                                    settings=PlatformSettings.from_env() if args.predictor == "live_llm_kg" else None)
         print(curve_markdown(report))
         if args.out:
             write_json(args.out, report)
             print(f"wrote {args.out}")
-        return 0
+        return 1 if report.get("stopped_early") else 0
     if args.command == "gate":
         baseline = load_json(args.baseline)
         if args.current:

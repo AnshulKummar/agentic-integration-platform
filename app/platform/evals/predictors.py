@@ -7,6 +7,10 @@
   KG but disables learning (the demo's ablation switch).
 * ``live_llm``     - Claude with a strict JSON schema; token/cost accounting and a
   hard stop at ``settings.eval_cost_cap_usd``. Only constructed on explicit request.
+* ``live_llm_kg``  - the same Claude call, plus context retrieved from a KG of
+  reviewed field mappings (``kg_memory``) learned from earlier cases. With
+  ``learning=False`` the KG stays empty, so the prompt is exactly ``live_llm``'s:
+  the two arms differ only by the KG context.
 
 Runner contract: ``predict(case)`` then ``observe(case)`` (feedback with gold)
 for every case, in order. Stateless predictors ignore ``observe``.
@@ -17,7 +21,7 @@ from __future__ import annotations
 import json
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Literal, Protocol
 
 from app.platform.config import PlatformSettings
@@ -30,12 +34,13 @@ from app.platform.evals.adapter import (
     row_source_path,
 )
 from app.platform.evals.dataset import TRANSFORMS, EvalCase
+from app.platform.evals.kg_memory import KGMappingMemory, render_context
 from app.platform.observability.metrics import LLM_COST, LLM_TOKENS
 
 log = logging.getLogger(__name__)
 
-PredictorName = Literal["deterministic", "kg_learning", "live_llm"]
-PREDICTORS: tuple[PredictorName, ...] = ("deterministic", "kg_learning", "live_llm")
+PredictorName = Literal["deterministic", "kg_learning", "live_llm", "live_llm_kg"]
+PREDICTORS: tuple[PredictorName, ...] = ("deterministic", "kg_learning", "live_llm", "live_llm_kg")
 Origin = Literal["kg_reused", "kg_inferred", "llm_new", "human_edit", "llm"]
 
 
@@ -253,12 +258,14 @@ def build_prompt(case: EvalCase) -> str:
 class LiveLLMPredictor:
     name = "live_llm"
 
-    def __init__(self, settings: PlatformSettings, client: MessagesClient | None = None) -> None:
+    def __init__(self, settings: PlatformSettings, client: MessagesClient | None = None,
+                 cost: CostTracker | None = None) -> None:
         if client is None and settings.anthropic_api_key is None:
             raise ValueError("live_llm needs ANTHROPIC_API_KEY (or PLATFORM_ANTHROPIC_API_KEY)")
         self.settings = settings
         self.model = settings.llm_model
-        self.cost = CostTracker(cap_usd=settings.eval_cost_cap_usd)
+        #: Pass one tracker to several predictors to enforce one cap across a whole experiment.
+        self.cost = cost or CostTracker(cap_usd=settings.eval_cost_cap_usd)
         self._client = client
 
     @property
@@ -274,8 +281,13 @@ class LiveLLMPredictor:
             return client
         return self._client
 
+    def context(self, case: EvalCase) -> str:
+        """Extra prompt context (none for plain live_llm)."""
+        return ""
+
     def predict(self, case: EvalCase) -> CasePrediction:
-        prompt = build_prompt(case)
+        extra = self.context(case)
+        prompt = build_prompt(case) + ("\n\n" + extra if extra else "")
         est_input = math.ceil((len(SYSTEM_PROMPT) + len(prompt)) / 3.0) + 400  # chars/3 over-estimates tokens
         self.cost.check(self.model, est_input, LLM_MAX_TOKENS)
         response = self.client.create(
@@ -298,7 +310,9 @@ class LiveLLMPredictor:
         if text is None:
             raise RuntimeError(f"{case.id}: structured output missing text block")
         data = json.loads(text)
-        return self._parse(case, data, cost)
+        prediction = self._parse(case, data, cost)
+        prediction.meta["prompt_chars"] = len(prompt)
+        return prediction
 
     def _parse(self, case: EvalCase, data: dict[str, Any], cost: float) -> CasePrediction:
         valid_targets = {f.path for f in case.target_fields}
@@ -322,6 +336,39 @@ class LiveLLMPredictor:
         return None
 
 
+class LiveLLMKGPredictor(LiveLLMPredictor):
+    """live_llm + KG context of reviewed mappings learned from earlier cases (see kg_memory)."""
+
+    def __init__(self, settings: PlatformSettings, client: MessagesClient | None = None,
+                 cost: CostTracker | None = None, *, learning: bool = True) -> None:
+        super().__init__(settings, client, cost)
+        self.learning = learning
+        self.name = "live_llm_kg" if learning else "live_llm_kg_off"
+        self.memory = KGMappingMemory()
+        self._context: dict[str, set[tuple[str, str | None]]] = {}
+
+    def context(self, case: EvalCase) -> str:
+        facts = self.memory.retrieve(case)
+        # Remember which (target path, source path) pairs the KG offered, to measure reuse.
+        self._context[case.id] = {(f.target_path, f.source_path) for f in facts if f.source_path}
+        return render_context(facts)
+
+    def predict(self, case: EvalCase) -> CasePrediction:
+        prediction = super().predict(case)
+        offered = self._context.pop(case.id, set())
+        prediction.meta["kg_facts"] = len(offered)
+        prediction.meta["kg_size"] = len(self.memory)
+        prediction.mappings = [
+            replace(m, origin="kg_reused") if m.source is not None and (m.target, m.source) in offered else m
+            for m in prediction.mappings
+        ]
+        return prediction
+
+    def observe(self, case: EvalCase, prediction: CasePrediction) -> None:
+        if self.learning:
+            self.memory.learn(case)
+
+
 def make_predictor(name: str, settings: PlatformSettings | None = None, *, learning: bool = True,
                    family_retrieval: bool = True) -> Predictor:
     if name == "deterministic":
@@ -330,4 +377,6 @@ def make_predictor(name: str, settings: PlatformSettings | None = None, *, learn
         return KGLearningPredictor(learning=learning, family_retrieval=family_retrieval)
     if name == "live_llm":
         return LiveLLMPredictor(settings or PlatformSettings.from_env())
+    if name == "live_llm_kg":
+        return LiveLLMKGPredictor(settings or PlatformSettings.from_env(), learning=learning)
     raise ValueError(f"unknown predictor {name!r} (choose from {', '.join(PREDICTORS)})")
