@@ -48,7 +48,7 @@ from app.platform.core_models import (
 from app.platform.db import new_id, utcnow
 from app.platform.errors import Conflict, Forbidden, NotFound, PlatformError, ValidationFailed
 from app.platform.integrations import planner
-from app.platform.integrations.codegen_hook import render_code
+from app.platform.integrations.codegen_hook import allowed_tools, render_code
 from app.platform.integrations.kg_repo import (
     BootstrapResult,
     KGRepository,
@@ -283,7 +283,8 @@ def to_domain(integ: Integration, version: IntegrationVersion, plan_rec: Version
 def _refresh(domain: DomainIntegration, kg: KnowledgeGraph, ctx: list[dict[str, Any]]) -> None:
     """Recompute derived fields (demo ``_refresh`` + risk assessment)."""
     domain.confidence = integration_confidence(domain.mappings, domain.human_edits)
-    domain.tools_used, domain.endpoints = planner.tools_and_endpoints(domain)
+    planned_tools, domain.endpoints = planner.tools_and_endpoints(domain)
+    domain.tools_used = allowed_tools(domain, planned_tools)
     domain.code = render_code(domain)
     domain.risks = assess_risks(domain, kg, planner.field_catalog(), ctx)
 

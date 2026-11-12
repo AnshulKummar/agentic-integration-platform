@@ -315,3 +315,8 @@ test-reports/
 # Platform local DB
 platform.db
 *.db-journal
+
+# Agent worktrees and local build caches
+.claude/worktrees/
+demo/.vite/
+.env.platform

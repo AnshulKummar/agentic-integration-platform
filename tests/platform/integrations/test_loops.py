@@ -35,7 +35,7 @@ async def test_loop1_drafts_reviews_approves_and_learns(
     assert {a["role"] for a in version["approvals"]} == {"pm", "eng"}
     assert "crm.get_account" in version["allowedTools"] and "billing.create_customer" in version["allowedTools"]
     assert "tax.calculate" in version["allowedTools"]
-    assert "@on_event" in version["code"] and "to_iso4217" in version["code"]
+    assert "def run(event, tools)" in version["code"] and "to_iso4217" in version["code"]
     assert {r["label"] for r in version["risks"]} >= {"Data access boundary", "Tool budget", "Deprecated field"}
     assert version["plan"]["patternId"] == "pat-crm-billing"
 
