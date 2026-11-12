@@ -123,8 +123,14 @@ class DockerSandbox(ProcessSandbox):
         return Child(proc=proc, kill=kill, cleanup=cleanup)
 
     async def _docker_kill(self, name: str) -> None:
+        """Force-remove the container and wait until it is gone.
+
+        ``docker rm -f`` kills and removes synchronously, so no container outlives a
+        timed-out run (``docker kill`` + ``--rm`` removed it asynchronously, leaving a
+        window where it still existed).
+        """
         killer = await asyncio.create_subprocess_exec(
-            self.docker_bin, "kill", name,
+            self.docker_bin, "rm", "-f", name,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.PIPE,
             env=docker_cli_env(),
@@ -132,6 +138,22 @@ class DockerSandbox(ProcessSandbox):
         _, err = await killer.communicate()
         if killer.returncode not in (0, None):
             text = err.decode("utf-8", errors="replace").strip()
-            # "No such container" just means it already exited (--rm).
-            if "No such container" not in text and "is not running" not in text:
+            # Already gone, or --rm is removing it right now: both end in "no container".
+            if "No such container" not in text and "already in progress" not in text:
                 log.warning("sandbox.docker_kill_failed name=%s error=%s", name, text[:300])
+        await self._wait_gone(name)
+
+    async def _wait_gone(self, name: str, timeout_s: float = 10.0) -> None:
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout_s
+        while loop.time() < deadline:
+            probe = await asyncio.create_subprocess_exec(
+                self.docker_bin, "container", "inspect", name,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+                env=docker_cli_env(),
+            )  # fmt: skip
+            if await probe.wait() != 0:
+                return
+            await asyncio.sleep(0.2)
+        log.error("sandbox.docker_container_not_removed name=%s timeout_s=%s", name, timeout_s)
