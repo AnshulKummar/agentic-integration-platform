@@ -29,6 +29,7 @@ from app.platform.core_models import ExecutionRecord, KGNodeRecord
 from app.platform.db import Database
 from app.platform.deployments.clock import ManualClock
 from app.platform.deployments.models import DeploymentStatus
+from app.platform.deployments.routing import routes_to_canary
 from app.platform.runtime import build_deployment_deps
 from app.platform.simulators.billing import create_billing_app
 from app.platform.simulators.crm import TOKEN_PATH, create_crm_app
@@ -231,16 +232,29 @@ async def _approved_loop1(client: httpx.AsyncClient, tokens: dict[str, str]) -> 
 async def _send_events(client: httpx.AsyncClient, token: str, iid: str, n: int, start: int = 0) -> list[int]:
     codes = []
     for i in range(start, start + n):
-        r = await client.post(
-            f"/v1/integrations/{iid}/events",
-            headers=_auth(token),
-            json={
-                "event_id": f"evt-{i}",
-                "payload": {"opportunity_id": f"opp-00{1 + i % 3}"},
-            },
-        )
-        codes.append(r.status_code)
+        await _post_event(client, token, iid, i, codes)
     return codes
+
+
+async def _send_canary_events(client: httpx.AsyncClient, token: str, iid: str, n: int, percent: int) -> list[int]:
+    """Exactly ``n`` events that the deterministic split routes to the canary (ids picked
+    with the platform's own routing function, since the integration id is random per run)."""
+    codes: list[int] = []
+    i = 0
+    while len(codes) < n:
+        if routes_to_canary(iid, f"evt-{i}", percent):
+            await _post_event(client, token, iid, i, codes)
+        i += 1
+    return codes
+
+
+async def _post_event(client: httpx.AsyncClient, token: str, iid: str, i: int, codes: list[int]) -> None:
+    r = await client.post(
+        f"/v1/integrations/{iid}/events",
+        headers=_auth(token),
+        json={"event_id": f"evt-{i}", "payload": {"opportunity_id": f"opp-00{1 + i % 3}"}},
+    )
+    codes.append(r.status_code)
 
 
 async def _deployment(client: httpx.AsyncClient, token: str, dep_id: str) -> dict[str, Any]:
@@ -270,8 +284,8 @@ async def test_loop1_ships_through_real_sandbox_and_vendor_apis(
         for c in dep.get("health_checks", [])
     ] or dep
 
-    codes = await _send_events(client, tokens["engineer"], iid, 12)
-    assert codes.count(200) >= 3, codes  # canary share served; the rest have no live version yet (409)
+    codes = await _send_canary_events(client, tokens["engineer"], iid, 4, percent=50)
+    assert codes == [200] * 4, codes  # every canary-routed event is served by the new version
     clock.advance(31)
     await platform.drain()
     for _ in range(4):  # post-deploy watch window
@@ -316,7 +330,7 @@ async def test_vendor_outage_during_canary_rolls_back_automatically(
             "/_sim/faults", headers={"X-Sim-Admin-Token": vendors.billing_admin}, json={"outage": True}
         )
         assert r.status_code == 200, r.text
-    await _send_events(client, tokens["engineer"], iid, 12)
+    await _send_canary_events(client, tokens["engineer"], iid, 4, percent=50)
     clock.advance(31)
     await platform.drain()
 
