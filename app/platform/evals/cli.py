@@ -56,6 +56,11 @@ def _parser() -> argparse.ArgumentParser:
     curve.add_argument("--predictor", choices=("kg_learning", "live_llm_kg"), default="kg_learning")
     curve.add_argument("--out", type=Path)
 
+    conv = sub.add_parser("conventions", help="org-conventions KG experiment (live Claude, pre-registered)")
+    conv.add_argument("--replicates", type=int, default=3)
+    conv.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    conv.add_argument("--out", type=Path)
+
     g = sub.add_parser("gate", help="fail (exit 1) if F1 or edits regress beyond the baseline tolerance")
     g.add_argument("--baseline", type=Path, default=BASELINE_PATH)
     g.add_argument("--current", type=Path, help="compare an existing run report instead of re-running")
@@ -120,6 +125,15 @@ def main(argv: list[str] | None = None) -> int:
             write_json(args.out, report)
             print(f"wrote {args.out}")
         return 1 if report.get("stopped_early") else 0
+    if args.command == "conventions":
+        from app.platform.evals.conventions import conventions_markdown, run_conventions
+
+        conv_report = run_conventions(PlatformSettings.from_env(), replicates=args.replicates, seed=args.seed)
+        print(conventions_markdown(conv_report))
+        if args.out:
+            write_json(args.out, conv_report)
+            print(f"wrote {args.out}")
+        return 1 if conv_report["stopped_early"] else 0
     if args.command == "gate":
         baseline = load_json(args.baseline)
         if args.current:

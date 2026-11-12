@@ -62,7 +62,7 @@ DATASETS_DIR = Path(__file__).parent / "datasets"
 HANDLABELED_DIR = DATASETS_DIR / "handlabeled"
 SCHEMAS_FILE = "_schemas.json"
 
-Suite = Literal["synthetic", "handlabeled"]
+Suite = Literal["synthetic", "handlabeled", "conventions"]
 SUITES: tuple[Suite, ...] = ("synthetic", "handlabeled")
 Difficulty = Literal["easy", "medium", "hard"]
 FieldType = Literal["string", "integer", "number", "boolean", "date", "datetime", "enum", "object", "array"]
