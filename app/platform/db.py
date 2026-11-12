@@ -102,8 +102,10 @@ def _guard_writes(session: Session, _ctx: Any, _instances: Any) -> None:
 
 @event.listens_for(Engine, "connect")
 def _sqlite_fks(dbapi_conn: Any, _record: Any) -> None:
-    # Enforce FKs on SQLite (no-op elsewhere).
-    if type(dbapi_conn).__module__.startswith(("sqlite3", "aiosqlite")):
+    # Enforce FKs on SQLite (no-op elsewhere). With aiosqlite the connection is
+    # SQLAlchemy's adapter (module sqlalchemy.dialects.sqlite.aiosqlite), so match
+    # on "sqlite" anywhere in the module path, not just the raw driver modules.
+    if "sqlite" in type(dbapi_conn).__module__:
         cur = dbapi_conn.cursor()
         cur.execute("PRAGMA foreign_keys=ON")
         cur.close()

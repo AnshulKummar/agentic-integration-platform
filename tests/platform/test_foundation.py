@@ -74,3 +74,13 @@ async def test_repository_hides_other_tenants(db: Database, tenant: Tenant, othe
 async def test_app_boots_and_errors_use_envelope(client) -> None:  # type: ignore[no-untyped-def]
     r = await client.get("/openapi.json")
     assert r.status_code == 200
+
+
+async def test_foreign_keys_are_enforced(db: Database) -> None:
+    """SQLite must enforce FKs like PostgreSQL does, or insert-order bugs hide in local tests."""
+    from sqlalchemy.exc import IntegrityError
+
+    async with db.session() as s:
+        s.add(Integration(tenant_id="no-such-tenant", name="orphan", source_system="a", target_system="b"))
+        with pytest.raises(IntegrityError):
+            await s.commit()

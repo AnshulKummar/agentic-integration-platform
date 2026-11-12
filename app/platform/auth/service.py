@@ -572,6 +572,13 @@ async def add_member(session: AsyncSession, principal: Principal, body: MemberCr
             must_change_password=True,
         )
         session.add(user)
+        # Insert the user before its memberships: there is no ORM relationship to
+        # order them, and PostgreSQL (and SQLite with FKs on) enforce memberships.user_id.
+        try:
+            await session.flush()
+        except IntegrityError as exc:
+            await session.rollback()
+            raise Conflict("a user with this email already exists", code="email_taken") from exc
     elif await _roles_in_tenant(session, user.id, principal.tenant_id):
         raise Conflict("user is already a member; use PATCH to change roles", code="already_member")
 
