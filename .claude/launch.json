@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "demo-preview", "runtimeExecutable": "npx", "runtimeArgs": ["--prefix", "demo", "vite", "preview", "demo", "--port", "4173", "--strictPort"], "port": 4173 }
+  ]
+}

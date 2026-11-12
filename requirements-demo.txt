@@ -1,0 +1,10 @@
+# Self-contained PMAIP demo backend (app/demo). No databases required.
+# Install: .venv-demo/Scripts/python.exe -m pip install -r requirements-demo.txt
+fastapi==0.143.1
+uvicorn==0.54.0
+pydantic==2.14.1
+httpx==0.28.1
+anthropic==1.14.0
+pytest==9.1.1
+pytest-asyncio==1.4.0
+pytest-timeout==2.4.0

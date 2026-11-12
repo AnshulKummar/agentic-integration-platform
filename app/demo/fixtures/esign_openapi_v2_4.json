@@ -1,0 +1,113 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "e-Signature App API",
+    "version": "2.4.0",
+    "x-release-date": "2026-03-02",
+    "description": "Envelope-based document signing (v2)."
+  },
+  "servers": [
+    {
+      "url": "/mock/esign"
+    }
+  ],
+  "paths": {
+    "/v2/envelopes": {
+      "post": {
+        "operationId": "sendEnvelope",
+        "summary": "Send a document for signature",
+        "tags": [
+          "envelopes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Envelope"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Envelope created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/envelopes/{id}/signers": {
+      "get": {
+        "operationId": "getSigners",
+        "summary": "List the signers of an envelope",
+        "tags": [
+          "envelopes"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Envelope with signer details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Envelope": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "readOnly": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "sent",
+              "delivered",
+              "completed",
+              "declined"
+            ],
+            "readOnly": true
+          },
+          "document_id": {
+            "type": "string"
+          },
+          "signer_email": {
+            "type": "string",
+            "format": "email",
+            "description": "Signer e-mail address"
+          }
+        },
+        "required": [
+          "document_id",
+          "signer_email"
+        ]
+      }
+    }
+  }
+}

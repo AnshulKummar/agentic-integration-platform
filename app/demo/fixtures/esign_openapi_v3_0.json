@@ -1,0 +1,189 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "e-Signature App API",
+    "version": "3.0.0",
+    "x-release-date": "2026-11-10",
+    "description": "Agreements API v3. Adds template-based agreements, signed form data and completion webhooks. Envelope.signer_email is deprecated in favour of signers[].email."
+  },
+  "servers": [{ "url": "/mock/esign" }],
+  "paths": {
+    "/v2/envelopes": {
+      "post": {
+        "operationId": "sendEnvelope",
+        "summary": "Send a document for signature",
+        "tags": ["envelopes"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Envelope" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Envelope created",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Envelope" } }
+            }
+          }
+        }
+      }
+    },
+    "/v2/envelopes/{id}/signers": {
+      "get": {
+        "operationId": "getSigners",
+        "summary": "List the signers of an envelope",
+        "tags": ["envelopes"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Envelope with signer details",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Envelope" } }
+            }
+          }
+        }
+      }
+    },
+    "/v3/agreements": {
+      "post": {
+        "operationId": "createAgreement",
+        "summary": "Create agreement from template",
+        "tags": ["agreements"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AgreementCreate" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Agreement created and sent",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Agreement" } }
+            }
+          }
+        }
+      }
+    },
+    "/v3/agreements/{id}/fields": {
+      "get": {
+        "operationId": "getAgreementFields",
+        "summary": "Signed form data (amount, term, payment terms)",
+        "tags": ["agreements"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Values captured in the signed agreement",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AgreementFields" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-webhooks": {
+    "agreement.completed": {
+      "post": {
+        "operationId": "agreementCompleted",
+        "summary": "Fires when all parties have signed",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AgreementCompletedEvent" } }
+          }
+        },
+        "responses": { "200": { "description": "Acknowledged" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Envelope": {
+        "type": "object",
+        "required": ["document_id"],
+        "properties": {
+          "id": { "type": "string", "readOnly": true },
+          "status": {
+            "type": "string",
+            "enum": ["sent", "delivered", "completed", "declined"],
+            "readOnly": true
+          },
+          "document_id": { "type": "string" },
+          "signer_email": {
+            "type": "string",
+            "format": "email",
+            "description": "Signer e-mail address",
+            "deprecated": true,
+            "x-replaced-by": "signers[].email",
+            "x-sunset": "2027-03-31"
+          },
+          "signers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Signer" }
+          }
+        }
+      },
+      "Signer": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string", "enum": ["signer", "cc"], "default": "signer" }
+        }
+      },
+      "AgreementCreate": {
+        "type": "object",
+        "required": ["template_id", "signers"],
+        "properties": {
+          "template_id": { "type": "string", "description": "Agreement template to instantiate" },
+          "external_ref": { "type": "string", "description": "Caller reference, e.g. CRM contract id" },
+          "signers": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/components/schemas/Signer" }
+          }
+        }
+      },
+      "Agreement": {
+        "type": "object",
+        "x-business-object": true,
+        "properties": {
+          "id": { "type": "string", "readOnly": true },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "out_for_signature", "completed", "cancelled"],
+            "readOnly": true
+          },
+          "external_ref": { "type": "string" },
+          "signers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Signer" }
+          },
+          "fields": { "$ref": "#/components/schemas/AgreementFields" }
+        }
+      },
+      "AgreementFields": {
+        "type": "object",
+        "properties": {
+          "amount": { "type": "number", "description": "Contract value captured at signing" },
+          "payment_terms": { "type": "string", "description": "Payment terms as written in the agreement" }
+        }
+      },
+      "AgreementCompletedEvent": {
+        "type": "object",
+        "required": ["event", "agreement_id"],
+        "properties": {
+          "event": { "type": "string", "enum": ["agreement.completed"] },
+          "agreement_id": { "type": "string" },
+          "external_ref": { "type": "string" },
+          "completed_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

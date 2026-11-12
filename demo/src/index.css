@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens. Agent colours follow the paper's Fig. 1: LLM = blue, KG = red, MCP = green. */
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-2: #f0f0ec;
+  --border: #e2e1dc;
+  --text: #1c1c1a;
+  --muted: #6b6a64;
+  --accent: #3b5bdb;
+  --accent-contrast: #ffffff;
+
+  --agent-user: #6b6a64;
+  --agent-llm: #2f8fd8;
+  --agent-kg: #d6453d;
+  --agent-mcp: #2f9e5b;
+  --agent-governance: #8a5cd6;
+  --agent-context: #b8862b;
+  --agent-external: #5f6b7a;
+
+  --ok: #2f9e5b;
+  --warn: #c98a12;
+  --bad: #d6453d;
+
+  --learned-loop1: #2f8fd8;
+  --learned-loop2: #8a5cd6;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #121211;
+    --surface: #1b1b19;
+    --surface-2: #242421;
+    --border: #33332f;
+    --text: #ecebe6;
+    --muted: #9c9a92;
+    --accent: #7c95ff;
+    --accent-contrast: #0f0f0e;
+    --agent-user: #9c9a92;
+    --agent-llm: #5cb1f0;
+    --agent-kg: #f06a5f;
+    --agent-mcp: #4fc27f;
+    --agent-governance: #ac85ef;
+    --agent-context: #d9a94a;
+    --agent-external: #8e9aaa;
+    --ok: #4fc27f;
+    --warn: #e2a93a;
+    --bad: #f06a5f;
+    --learned-loop1: #5cb1f0;
+    --learned-loop2: #ac85ef;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #121211;
+  --surface: #1b1b19;
+  --surface-2: #242421;
+  --border: #33332f;
+  --text: #ecebe6;
+  --muted: #9c9a92;
+  --accent: #7c95ff;
+  --accent-contrast: #0f0f0e;
+  --agent-user: #9c9a92;
+  --agent-llm: #5cb1f0;
+  --agent-kg: #f06a5f;
+  --agent-mcp: #4fc27f;
+  --agent-governance: #ac85ef;
+  --agent-context: #d9a94a;
+  --agent-external: #8e9aaa;
+  --ok: #4fc27f;
+  --warn: #e2a93a;
+  --bad: #f06a5f;
+  --learned-loop1: #5cb1f0;
+  --learned-loop2: #ac85ef;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+code,
+pre {
+  font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+}

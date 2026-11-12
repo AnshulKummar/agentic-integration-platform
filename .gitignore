@@ -308,3 +308,6 @@ test-reports/
 
 # Profiling
 *.prof
+
+# PMAIP demo backend virtualenv
+.venv-demo/

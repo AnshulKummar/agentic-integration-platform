@@ -1,5 +1,33 @@
 # 🚀 Agentic Integration Platform
 
+## DSI 2026 demo: self-improving knowledge graph
+
+**Live click-through:** https://anshulkummar.github.io/agentic-integration-platform/
+
+This fork adds a demo of the PMAIP paper. It has two loops: a PM's intent becomes a deployed integration and the KG learns from it, then a partner's new API is matched to the roadmap automatically and implemented by reusing what was learned.
+
+| Part | Path | Run |
+|---|---|---|
+| Click-through UI (static, GitHub Pages) | `demo/` | `cd demo && npm ci && npm run dev` |
+| Runnable agent backend (no databases needed) | `app/demo/` | see below |
+
+```bash
+# Python 3.12 venv
+py -3.12 -m venv .venv-demo
+.venv-demo/Scripts/python.exe -m pip install -r requirements-demo.txt
+
+# Run both loops in the terminal (scripted; add --live with ANTHROPIC_API_KEY set, --no-learning for the ablation)
+.venv-demo/Scripts/python.exe app/demo/run.py all
+
+# HTTP API on :8000 (/demo/state, /demo/run/loop1, ...)
+.venv-demo/Scripts/python.exe app/demo/run.py serve --port 8000
+
+# Tests
+.venv-demo/Scripts/python.exe -m pytest -c tests/demo/pytest.ini tests/demo
+```
+
+---
+
 > Enterprise-grade AI-powered integration platform that transforms natural language requirements into production-ready integration code.
 
 > **Note:** This repository contains a research prototype; while the architecture is intended for enterprise‑grade integrations, some components are still experimental or under  development. Users are encouraged to experiment, contribute and provide feedback, but the system should not yet be considered a drop‑in production solution.

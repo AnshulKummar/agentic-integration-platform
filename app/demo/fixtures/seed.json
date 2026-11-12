@@ -1,0 +1,737 @@
+{
+  "version": 1,
+  "systems": {
+    "sys-crm": "CRM Platform (ours)",
+    "sys-billing": "Billing / ERP",
+    "sys-tax": "Tax Service",
+    "sys-esign": "e-Signature App"
+  },
+  "nodes": [
+    {
+      "id": "sys-crm",
+      "label": "CRM Platform (ours)",
+      "type": "system",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "sys-billing",
+      "label": "Billing / ERP",
+      "type": "system",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "sys-tax",
+      "label": "Tax Service",
+      "type": "system",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "sys-esign",
+      "label": "e-Signature App",
+      "type": "system",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-account",
+      "label": "Account",
+      "type": "business_object",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "bo-opportunity",
+      "label": "Opportunity",
+      "type": "business_object",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "bo-contact",
+      "label": "Contact",
+      "type": "business_object",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "bo-contract",
+      "label": "Contract",
+      "type": "business_object",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "f-acc-name",
+      "label": "Account.name",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "f-acc-billing",
+      "label": "Account.billing_address",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "f-acc-shipping",
+      "label": "Account.shipping_address",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "f-acc-currency",
+      "label": "Account.currency",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "f-opp-amount",
+      "label": "Opportunity.amount",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "f-opp-terms",
+      "label": "Opportunity.payment_terms",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "f-contact-email",
+      "label": "Contact.email",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "bo-customer",
+      "label": "Customer",
+      "type": "business_object",
+      "learnedIn": "seed",
+      "system": "sys-billing"
+    },
+    {
+      "id": "bo-invoice",
+      "label": "Invoice",
+      "type": "business_object",
+      "learnedIn": "seed",
+      "system": "sys-billing"
+    },
+    {
+      "id": "f-cust-name",
+      "label": "Customer.legal_name",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-billing"
+    },
+    {
+      "id": "f-cust-addr",
+      "label": "Customer.address",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-billing"
+    },
+    {
+      "id": "f-cust-currency",
+      "label": "Customer.currency_code",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-billing"
+    },
+    {
+      "id": "f-cust-terms",
+      "label": "Customer.terms_code",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-billing"
+    },
+    {
+      "id": "f-inv-total",
+      "label": "Invoice.total",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-billing"
+    },
+    {
+      "id": "ep-billing-customers",
+      "label": "POST /customers",
+      "type": "api_endpoint",
+      "learnedIn": "seed",
+      "system": "sys-billing"
+    },
+    {
+      "id": "ep-billing-invoices",
+      "label": "POST /invoices",
+      "type": "api_endpoint",
+      "learnedIn": "seed",
+      "system": "sys-billing"
+    },
+    {
+      "id": "bo-taxquote",
+      "label": "TaxQuote",
+      "type": "business_object",
+      "learnedIn": "seed",
+      "system": "sys-tax"
+    },
+    {
+      "id": "f-tax-jur",
+      "label": "TaxQuote.jurisdiction",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-tax"
+    },
+    {
+      "id": "ep-tax-calc",
+      "label": "POST /tax/calculate",
+      "type": "api_endpoint",
+      "learnedIn": "seed",
+      "system": "sys-tax"
+    },
+    {
+      "id": "bo-envelope",
+      "label": "Envelope (v2)",
+      "type": "business_object",
+      "learnedIn": "seed",
+      "system": "sys-esign"
+    },
+    {
+      "id": "f-env-signer",
+      "label": "Envelope.signer_email",
+      "type": "data_field",
+      "learnedIn": "seed",
+      "system": "sys-esign"
+    },
+    {
+      "id": "ep-esign-v2-send",
+      "label": "POST /v2/envelopes",
+      "type": "api_endpoint",
+      "learnedIn": "seed",
+      "system": "sys-esign"
+    },
+    {
+      "id": "proc-closedwon",
+      "label": "Deal closed-won",
+      "type": "process",
+      "learnedIn": "seed",
+      "system": "sys-crm"
+    },
+    {
+      "id": "proc-contract-signed",
+      "label": "Contract signed",
+      "type": "process",
+      "learnedIn": "seed",
+      "note": "No API exposes this event yet"
+    },
+    {
+      "id": "pat-crm-esign-send",
+      "label": "Pattern: send contract for signature (v2)",
+      "type": "pattern",
+      "learnedIn": "seed",
+      "confidence": 0.9,
+      "props": {
+        "sourceSystems": [
+          "sys-crm"
+        ],
+        "targetSystems": [
+          "sys-esign"
+        ],
+        "trigger": "Rep clicks Send for signature",
+        "mappings": [
+          {
+            "source": "Contact.email",
+            "target": "Envelope.signer_email",
+            "transform": "copy",
+            "confidence": 0.9
+          }
+        ],
+        "rules": [],
+        "uses": 3
+      }
+    },
+    {
+      "id": "rm-contract-to-cash",
+      "label": "Roadmap: Contract-to-cash",
+      "type": "roadmap",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "rm-billing-sync",
+      "label": "Roadmap: Closed-won → billing",
+      "type": "roadmap",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "rm-renewals",
+      "label": "Roadmap: Self-serve renewals",
+      "type": "roadmap",
+      "learnedIn": "seed"
+    }
+  ],
+  "edges": [
+    {
+      "id": "bo-account--BELONGS_TO--sys-crm",
+      "source": "bo-account",
+      "target": "sys-crm",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-opportunity--BELONGS_TO--sys-crm",
+      "source": "bo-opportunity",
+      "target": "sys-crm",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-contact--BELONGS_TO--sys-crm",
+      "source": "bo-contact",
+      "target": "sys-crm",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-contract--BELONGS_TO--sys-crm",
+      "source": "bo-contract",
+      "target": "sys-crm",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "proc-closedwon--BELONGS_TO--sys-crm",
+      "source": "proc-closedwon",
+      "target": "sys-crm",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-customer--BELONGS_TO--sys-billing",
+      "source": "bo-customer",
+      "target": "sys-billing",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-invoice--BELONGS_TO--sys-billing",
+      "source": "bo-invoice",
+      "target": "sys-billing",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "ep-billing-customers--BELONGS_TO--sys-billing",
+      "source": "ep-billing-customers",
+      "target": "sys-billing",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "ep-billing-invoices--BELONGS_TO--sys-billing",
+      "source": "ep-billing-invoices",
+      "target": "sys-billing",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-taxquote--BELONGS_TO--sys-tax",
+      "source": "bo-taxquote",
+      "target": "sys-tax",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "ep-tax-calc--BELONGS_TO--sys-tax",
+      "source": "ep-tax-calc",
+      "target": "sys-tax",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-envelope--BELONGS_TO--sys-esign",
+      "source": "bo-envelope",
+      "target": "sys-esign",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "ep-esign-v2-send--BELONGS_TO--sys-esign",
+      "source": "ep-esign-v2-send",
+      "target": "sys-esign",
+      "type": "BELONGS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-account--HAS_FIELD--f-acc-name",
+      "source": "bo-account",
+      "target": "f-acc-name",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-account--HAS_FIELD--f-acc-billing",
+      "source": "bo-account",
+      "target": "f-acc-billing",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-account--HAS_FIELD--f-acc-shipping",
+      "source": "bo-account",
+      "target": "f-acc-shipping",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-account--HAS_FIELD--f-acc-currency",
+      "source": "bo-account",
+      "target": "f-acc-currency",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-opportunity--HAS_FIELD--f-opp-amount",
+      "source": "bo-opportunity",
+      "target": "f-opp-amount",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-opportunity--HAS_FIELD--f-opp-terms",
+      "source": "bo-opportunity",
+      "target": "f-opp-terms",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-contact--HAS_FIELD--f-contact-email",
+      "source": "bo-contact",
+      "target": "f-contact-email",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-customer--HAS_FIELD--f-cust-name",
+      "source": "bo-customer",
+      "target": "f-cust-name",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-customer--HAS_FIELD--f-cust-addr",
+      "source": "bo-customer",
+      "target": "f-cust-addr",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-customer--HAS_FIELD--f-cust-currency",
+      "source": "bo-customer",
+      "target": "f-cust-currency",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-customer--HAS_FIELD--f-cust-terms",
+      "source": "bo-customer",
+      "target": "f-cust-terms",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-invoice--HAS_FIELD--f-inv-total",
+      "source": "bo-invoice",
+      "target": "f-inv-total",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-taxquote--HAS_FIELD--f-tax-jur",
+      "source": "bo-taxquote",
+      "target": "f-tax-jur",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "bo-envelope--HAS_FIELD--f-env-signer",
+      "source": "bo-envelope",
+      "target": "f-env-signer",
+      "type": "HAS_FIELD",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "proc-closedwon--APPLIES_TO--bo-opportunity",
+      "source": "proc-closedwon",
+      "target": "bo-opportunity",
+      "type": "APPLIES_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "sys-crm--CONNECTS_TO--sys-esign",
+      "source": "sys-crm",
+      "target": "sys-esign",
+      "type": "CONNECTS_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "pat-crm-esign-send--IMPLEMENTS--ep-esign-v2-send",
+      "source": "pat-crm-esign-send",
+      "target": "ep-esign-v2-send",
+      "type": "IMPLEMENTS",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "pat-crm-esign-send--APPLIES_TO--bo-contract",
+      "source": "pat-crm-esign-send",
+      "target": "bo-contract",
+      "type": "APPLIES_TO",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "rm-contract-to-cash--REQUIRES--proc-contract-signed",
+      "source": "rm-contract-to-cash",
+      "target": "proc-contract-signed",
+      "type": "REQUIRES",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "rm-contract-to-cash--REQUIRES--bo-invoice",
+      "source": "rm-contract-to-cash",
+      "target": "bo-invoice",
+      "type": "REQUIRES",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "rm-billing-sync--REQUIRES--proc-closedwon",
+      "source": "rm-billing-sync",
+      "target": "proc-closedwon",
+      "type": "REQUIRES",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "rm-billing-sync--REQUIRES--bo-customer",
+      "source": "rm-billing-sync",
+      "target": "bo-customer",
+      "type": "REQUIRES",
+      "learnedIn": "seed"
+    },
+    {
+      "id": "rm-renewals--REQUIRES--bo-contract",
+      "source": "rm-renewals",
+      "target": "bo-contract",
+      "type": "REQUIRES",
+      "learnedIn": "seed"
+    }
+  ],
+  "roadmap": [
+    {
+      "id": "rm-billing-sync",
+      "title": "Closed-won accounts sync to billing",
+      "description": "Finance re-keys every new customer from CRM into Billing. Remove the swivel-chair.",
+      "intent": "Every closed-won account should become a billing customer automatically.",
+      "column": "now",
+      "status": "planned",
+      "quarter": "Q4 2026",
+      "owner": "PM · Revenue Cloud",
+      "requires": [
+        "proc-closedwon",
+        "bo-customer"
+      ]
+    },
+    {
+      "id": "rm-forecast",
+      "title": "AI pipeline forecasting",
+      "description": "Forecast quarter-end pipeline from opportunity history.",
+      "intent": "Give sales leaders a weekly forecast with confidence bands.",
+      "column": "now",
+      "status": "in_progress",
+      "quarter": "Q4 2026",
+      "owner": "PM · Insights",
+      "requires": []
+    },
+    {
+      "id": "rm-contract-to-cash",
+      "title": "Contract-to-cash automation",
+      "description": "Signed contract → billing customer → first invoice with tax, no manual hand-off.",
+      "intent": "When a customer signs their contract, create the billing customer and first invoice automatically, with tax.",
+      "column": "next",
+      "status": "blocked",
+      "quarter": "Q1 2027",
+      "owner": "PM · Revenue Cloud",
+      "requires": [
+        "proc-contract-signed",
+        "bo-invoice"
+      ],
+      "blockedReason": "e-Signature App v2 has no \"agreement completed\" event or signed-field API"
+    },
+    {
+      "id": "rm-renewals",
+      "title": "Self-serve renewals",
+      "description": "Customers renew in-app; renewal contract generated and signed.",
+      "intent": "Let customers renew without talking to sales.",
+      "column": "later",
+      "status": "planned",
+      "quarter": "Q2 2027",
+      "owner": "PM · Revenue Cloud",
+      "requires": [
+        "bo-contract"
+      ]
+    },
+    {
+      "id": "rm-partner",
+      "title": "Partner portal SSO",
+      "description": "Resellers sign in with their own identity provider.",
+      "intent": "Partners should not need a separate password.",
+      "column": "later",
+      "status": "planned",
+      "quarter": "Q2 2027",
+      "owner": "PM · Platform",
+      "requires": []
+    },
+    {
+      "id": "rm-esign-send",
+      "title": "Send contracts for e-signature",
+      "description": "Reps send contracts from an Opportunity via the e-Signature App.",
+      "intent": "Reps send contracts for signature without leaving CRM.",
+      "column": "shipped",
+      "status": "shipped",
+      "quarter": "Q2 2026",
+      "owner": "PM · Revenue Cloud",
+      "requires": [
+        "bo-contract"
+      ]
+    }
+  ],
+  "fieldCatalog": {
+    "Account.name": {
+      "format": "text",
+      "pii": false
+    },
+    "Account.billing_address": {
+      "format": "postal_address"
+    },
+    "Account.shipping_address": {
+      "format": "postal_address"
+    },
+    "Account.currency": {
+      "format": "currency_display_name"
+    },
+    "Opportunity.amount": {
+      "format": "decimal"
+    },
+    "Opportunity.payment_terms": {
+      "format": "free_text"
+    },
+    "Contact.email": {
+      "format": "email",
+      "pii": true
+    },
+    "Customer.legal_name": {
+      "format": "text"
+    },
+    "Customer.address": {
+      "format": "postal_address"
+    },
+    "Customer.currency_code": {
+      "format": "iso4217",
+      "constraint": "pattern ^[A-Z]{3}$"
+    },
+    "Customer.terms_code": {
+      "format": "terms_code",
+      "constraint": "enum NET15|NET30|NET60|DUE_ON_RECEIPT"
+    },
+    "Invoice.total": {
+      "format": "decimal",
+      "defaultTransform": "+ tax"
+    },
+    "TaxQuote.jurisdiction": {
+      "format": "region_code"
+    },
+    "TaxQuote.amount": {
+      "format": "decimal"
+    },
+    "Agreement.signers[].email": {
+      "format": "email",
+      "pii": true
+    },
+    "Agreement.fields.amount": {
+      "format": "decimal"
+    },
+    "Agreement.fields.payment_terms": {
+      "format": "free_text"
+    }
+  },
+  "operations": {
+    "billing.create_customer": {
+      "system": "sys-billing",
+      "endpoint": "ep-billing-customers",
+      "mcpTool": "billing.create_customer",
+      "keywords": [
+        "billing customer",
+        "billing system",
+        "billing"
+      ],
+      "slots": [
+        "Customer.legal_name",
+        "Customer.address",
+        "Customer.currency_code",
+        "Customer.terms_code"
+      ]
+    },
+    "tax.calculate": {
+      "system": "sys-tax",
+      "endpoint": "ep-tax-calc",
+      "mcpTool": "tax.calculate",
+      "keywords": [
+        "tax"
+      ],
+      "slots": [
+        "TaxQuote.jurisdiction",
+        "TaxQuote.amount"
+      ]
+    },
+    "billing.create_invoice": {
+      "system": "sys-billing",
+      "endpoint": "ep-billing-invoices",
+      "mcpTool": "billing.create_invoice",
+      "keywords": [
+        "invoice"
+      ],
+      "slots": [
+        "Invoice.total"
+      ]
+    },
+    "crm.match_contact": {
+      "system": "sys-crm",
+      "endpoint": null,
+      "mcpTool": "crm.find_opportunity",
+      "keywords": [],
+      "slots": [
+        "Contact.email"
+      ]
+    }
+  },
+  "contextStore": {
+    "integrations": [
+      {
+        "id": "int-0",
+        "name": "Send contract for signature (CRM → e-Signature)",
+        "roadmapId": "rm-esign-send",
+        "pattern": "pat-crm-esign-send",
+        "status": "live",
+        "uses": [
+          "ep-esign-v2-send",
+          "f-env-signer"
+        ],
+        "sourceSystem": "sys-crm",
+        "targetSystem": "sys-esign"
+      }
+    ]
+  },
+  "knownApiVersions": {
+    "sys-esign": "2.4.0"
+  }
+}

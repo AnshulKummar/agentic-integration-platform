@@ -458,13 +458,10 @@ class PatternService(LoggerMixin):
             "processing_time_seconds": integration.processing_time_seconds,
         }
         
-        # Determine system types
-        source_system_types = []
-        target_system_types = []
-        
-        # TODO: Extract system types from integration
-        # This would require loading the related system connections
-        
+        # Determine system types from the integration's source/target connections
+        source_system_types = await self._system_types_for(db, integration.source_system_id)
+        target_system_types = await self._system_types_for(db, integration.target_system_id)
+
         # Create the pattern
         pattern = await self.create_pattern(
             db=db,
@@ -487,6 +484,27 @@ class PatternService(LoggerMixin):
         
         return pattern
     
+    async def _system_types_for(
+        self,
+        db: AsyncSession,
+        system_id: Optional[uuid.UUID],
+    ) -> List[str]:
+        """Return ``[system_type]`` for a system connection id, or ``[]`` if unknown."""
+        if system_id is None:
+            return []
+        # Imported lazily to keep module import side effects unchanged.
+        from app.models.system import SystemConnection
+
+        connection = await db.get(SystemConnection, system_id)
+        if connection is None:
+            self.logger.warning(
+                "System connection not found while learning pattern",
+                system_id=str(system_id),
+            )
+            return []
+        system_type = connection.system_type
+        return [system_type.value if hasattr(system_type, "value") else str(system_type)]
+
     async def get_pattern_statistics(self, db: AsyncSession) -> Dict[str, Any]:
         """
         Get pattern usage statistics.
