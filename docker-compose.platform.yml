@@ -1,0 +1,109 @@
+# Full PMAIP platform stack: Postgres, migrations, API, worker, vendor simulators,
+# Prometheus + Alertmanager + Grafana.
+#   cp .env.platform.example .env.platform   # fill in the secrets
+#   docker compose -f docker-compose.platform.yml --env-file .env.platform up --build
+#
+# SECURITY NOTE: api and worker mount the Docker socket so the docker sandbox
+# backend can start isolated, network-less containers for generated code. Access
+# to the socket is root-equivalent on the host. In production run the sandbox on a
+# dedicated host/VM (or a gVisor/Kata runtime, or Kubernetes Jobs) instead.
+
+x-platform-env: &platform-env
+  PLATFORM_ENV: production
+  PLATFORM_DATABASE_URL: postgresql+asyncpg://pmaip_app:${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}@postgres:5432/pmaip
+  PLATFORM_AUTO_CREATE_SCHEMA: "false"
+  PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET}
+  PLATFORM_MASTER_KEY: ${PLATFORM_MASTER_KEY:?set PLATFORM_MASTER_KEY}
+  PLATFORM_SANDBOX_BACKEND: docker
+  PLATFORM_LOG_JSON: "true"
+  PLATFORM_LOG_LEVEL: ${PLATFORM_LOG_LEVEL:-INFO}
+  PLATFORM_CORS_ORIGINS: ${PLATFORM_CORS_ORIGINS:-}
+  PLATFORM_LLM_MODEL: ${PLATFORM_LLM_MODEL:-claude-opus-5-5}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pmaip
+      POSTGRES_USER: pmaip_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./deploy/postgres/init-app-role.sh:/docker-entrypoint-initdb.d/10-app-role.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pmaip_owner -d pmaip"]
+      interval: 5s
+      retries: 20
+
+  migrate:
+    build: { context: ., dockerfile: Dockerfile.platform }
+    command: ["alembic", "-c", "alembic.platform.ini", "upgrade", "head"]
+    environment:
+      PLATFORM_DATABASE_URL: postgresql+asyncpg://pmaip_owner:${POSTGRES_PASSWORD}@postgres:5432/pmaip
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  pmaip-api:
+    build: { context: ., dockerfile: Dockerfile.platform }
+    environment: *platform-env
+    ports: ["8080:8080"]
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  pmaip-worker:
+    build: { context: ., dockerfile: Dockerfile.platform }
+    command: ["python", "-m", "app.platform.worker", "--metrics-port", "9100"]
+    environment: *platform-env
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  # Vendor simulators (stand-ins for real SaaS sandboxes). Point connections at
+  # http://sim-crm:8101 etc. Replace with real vendor sandbox URLs + credentials.
+  sim-crm:
+    build: { context: ., dockerfile: Dockerfile.platform }
+    command: ["python", "-m", "app.platform.simulators", "--app", "crm", "--host", "0.0.0.0", "--port", "8101"]
+    environment:
+      SIM_ADMIN_TOKEN: ${SIM_ADMIN_TOKEN:-}
+      SIM_CRM_CLIENT_ID: ${SIM_CRM_CLIENT_ID:-}
+      SIM_CRM_CLIENT_SECRET: ${SIM_CRM_CLIENT_SECRET:-}
+  sim-esign:
+    build: { context: ., dockerfile: Dockerfile.platform }
+    command: ["python", "-m", "app.platform.simulators", "--app", "esign", "--host", "0.0.0.0", "--port", "8102"]
+    environment:
+      SIM_ADMIN_TOKEN: ${SIM_ADMIN_TOKEN:-}
+      SIM_ESIGN_API_KEY: ${SIM_ESIGN_API_KEY:-}
+      SIM_ESIGN_WEBHOOK_SECRET: ${SIM_ESIGN_WEBHOOK_SECRET:-}
+  sim-billing:
+    build: { context: ., dockerfile: Dockerfile.platform }
+    command: ["python", "-m", "app.platform.simulators", "--app", "billing", "--host", "0.0.0.0", "--port", "8103"]
+    environment:
+      SIM_ADMIN_TOKEN: ${SIM_ADMIN_TOKEN:-}
+      SIM_BILLING_API_TOKEN: ${SIM_BILLING_API_TOKEN:-}
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    ports: ["9090:9090"]
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes: ["./deploy/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro"]
+  grafana:
+    image: grafana/grafana:11.3.1
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
+
+volumes:
+  pg_data:

@@ -143,7 +143,9 @@ class SandboxResult:
 class Sandbox(Protocol):
     backend: str
 
-    async def run(self, code: str, event: dict[str, Any], broker: ToolBroker, limits: SandboxLimits) -> SandboxResult: ...
+    async def run(
+        self, code: str, event: dict[str, Any], broker: ToolBroker, limits: SandboxLimits
+    ) -> SandboxResult: ...
 
 
 @runtime_checkable

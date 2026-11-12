@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from sqlalchemy import ColumnElement, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,10 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.platform.db import TenantScoped, TenantViolation
 from app.platform.errors import NotFound
 
-M = TypeVar("M", bound=TenantScoped)
 
-
-class TenantRepository(Generic[M]):
+class TenantRepository[M: TenantScoped]:
     """CRUD that can only ever see or write rows of one tenant.
 
     Cross-tenant reads return ``None`` / raise ``NotFound`` (never 403), so the
@@ -26,12 +24,12 @@ class TenantRepository(Generic[M]):
         self.model = model
 
     def _base(self) -> Any:
-        return select(self.model).where(self.model.tenant_id == self.tenant_id)  # type: ignore[attr-defined]
+        return select(self.model).where(self.model.tenant_id == self.tenant_id)
 
     async def get(self, id_: str) -> M | None:
         stmt = self._base().where(self.model.id == id_)  # type: ignore[attr-defined]
         result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()  # type: ignore[no-any-return]
+        return result.scalar_one_or_none()
 
     async def require(self, id_: str) -> M:
         obj = await self.get(id_)
@@ -57,7 +55,7 @@ class TenantRepository(Generic[M]):
     def add(self, obj: M) -> M:
         current = getattr(obj, "tenant_id", None)
         if current is None:
-            obj.tenant_id = self.tenant_id  # type: ignore[misc]
+            obj.tenant_id = self.tenant_id
         elif current != self.tenant_id:
             raise TenantViolation(f"{type(obj).__name__} belongs to another tenant")
         self.session.add(obj)

@@ -25,6 +25,14 @@ from app.platform.secrets.store import DbSecretStore
 log = logging.getLogger(__name__)
 
 
+KG_SYSTEM_PREFIX = "sys-"
+
+
+def connection_id(system_id: str) -> str:
+    """KG system ids (``sys-crm``, used on integrations) -> connection ids (``crm``, used by tools)."""
+    return system_id.removeprefix(KG_SYSTEM_PREFIX)
+
+
 def learning_hooks(db: Database) -> DeploymentHooks:
     """Hooks bound to ``db``: a version going live teaches the tenant's KG."""
     hooks = DeploymentHooks()
@@ -46,7 +54,7 @@ def build_deployment_deps(settings: PlatformSettings, db: Database) -> Deploymen
     secret_store = DbSecretStore(db, settings)
 
     async def connector_factory(tenant_id: str, system_id: str) -> Connector:
-        return await build_connector(db, secret_store, settings, tenant_id, system_id)
+        return await build_connector(db, secret_store, settings, tenant_id, connection_id(system_id))
 
     runner = DefaultIntegrationRunner(db, build_sandbox(settings), settings, connector_factory)
     # The runner persists ExecutionRecords itself; don't double count.

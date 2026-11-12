@@ -8,8 +8,8 @@ from sqlalchemy import select
 from app.platform.config import ConfigError, PlatformSettings
 from app.platform.core_models import Integration, Tenant
 from app.platform.db import Database, TenantViolation, bind_tenant
-from app.platform.tenancy import TenantRepository
 from app.platform.errors import NotFound
+from app.platform.tenancy import TenantRepository
 
 
 def test_production_refuses_unsafe_defaults() -> None:
@@ -27,7 +27,9 @@ def test_dev_fills_ephemeral_secrets() -> None:
 
 
 def test_from_env_reads_prefixed_vars() -> None:
-    s = PlatformSettings.from_env({"PLATFORM_CANARY_PERCENT": "25", "PLATFORM_CORS_ORIGINS": "a, b", "ANTHROPIC_API_KEY": "k"})
+    s = PlatformSettings.from_env(
+        {"PLATFORM_CANARY_PERCENT": "25", "PLATFORM_CORS_ORIGINS": "a, b", "ANTHROPIC_API_KEY": "k"}
+    )
     assert s.canary_percent == 25
     assert s.cors_origins == ("a", "b")
     assert s.anthropic_api_key is not None
@@ -46,7 +48,9 @@ async def test_tenant_bound_session_filters_reads(db: Database, tenant: Tenant, 
     assert names == ["mine"]
 
 
-async def test_tenant_bound_session_blocks_cross_tenant_writes(db: Database, tenant: Tenant, other_tenant: Tenant) -> None:
+async def test_tenant_bound_session_blocks_cross_tenant_writes(
+    db: Database, tenant: Tenant, other_tenant: Tenant
+) -> None:
     async with db.session() as s:
         bind_tenant(s, tenant.id)
         s.add(_integration(other_tenant, "smuggled"))

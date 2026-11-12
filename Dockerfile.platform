@@ -1,0 +1,26 @@
+# Production image for the PMAIP platform (API + worker + simulators share it).
+#   docker build -f Dockerfile.platform -t pmaip-platform .
+FROM python:3.12-slim AS build
+ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /build
+COPY requirements-demo.txt requirements-platform.txt ./
+RUN python -m venv /opt/venv \
+ && /opt/venv/bin/pip install -r requirements-platform.txt
+
+FROM python:3.12-slim
+# Docker CLI only (no daemon) so the docker sandbox backend can launch isolated
+# containers. It needs access to a Docker engine; see docker-compose.platform.yml
+# for the security trade-off of mounting the socket.
+COPY --from=docker:27.5.1-cli /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=build /opt/venv /opt/venv
+ENV PATH=/opt/venv/bin:$PATH PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
+    PLATFORM_ENV=production PLATFORM_AUTO_CREATE_SCHEMA=false PLATFORM_SANDBOX_BACKEND=docker
+RUN useradd --create-home --uid 10001 pmaip
+WORKDIR /srv
+COPY --chown=pmaip:pmaip app ./app
+COPY --chown=pmaip:pmaip alembic.platform.ini ./
+USER pmaip
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
+  CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2).status == 200 else 1)"
+CMD ["uvicorn", "app.platform.main:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers", "--no-server-header"]

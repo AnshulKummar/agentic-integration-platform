@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.platform.audit import record_audit
+from app.platform.auth.rls import allow_cross_tenant
 from app.platform.config import PlatformSettings
 from app.platform.db import Database
 from app.platform.errors import Conflict, NotFound, PlatformError, ValidationFailed
@@ -216,6 +217,7 @@ async def rewrap_data_keys(db: Database, source: KeyProvider, target: KeyProvide
     count = 0
     while True:
         async with db.session() as session:  # unscoped on purpose: spans all tenants
+            allow_cross_tenant(session)  # explicit RLS bypass on PostgreSQL
             stmt = (
                 select(SecretRecord)
                 .where(SecretRecord.kek_id != target.key_id)

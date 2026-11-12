@@ -92,7 +92,7 @@ def _guard_writes(session: Session, _ctx: Any, _instances: Any) -> None:
         if isinstance(obj, TenantScoped):
             row_tenant = getattr(obj, "tenant_id", None)
             if row_tenant is None:
-                obj.tenant_id = tenant_id  # type: ignore[misc]
+                obj.tenant_id = tenant_id
             elif row_tenant != tenant_id:
                 raise TenantViolation(f"{type(obj).__name__} belongs to another tenant")
     for obj in session.deleted:

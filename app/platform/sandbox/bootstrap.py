@@ -181,8 +181,8 @@ def main() -> int:
     max_output = int(start.get("max_output_bytes", 1_000_000))
     log = _LogSink(proto, int(start.get("max_log_lines", 200)))
     # Nothing but the protocol may reach the real stdout/stderr from here on.
-    sys.stdout = log  # type: ignore[assignment]
-    sys.stderr = log  # type: ignore[assignment]
+    sys.stdout = log
+    sys.stderr = log
 
     prelude_ns: dict[str, Any] = {"__name__": "pmaip_prelude", "__builtins__": builtins}
     exec(compile(str(start.get("prelude", "")), "<prelude>", "exec"), prelude_ns)  # trusted host source

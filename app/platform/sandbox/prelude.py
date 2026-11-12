@@ -80,13 +80,13 @@ def geocode(address: object) -> str:
     return country
 
 
-def plus_tax(value: object, tax_quote: dict | None) -> float:
+def plus_tax(value: object, tax_quote: dict[str, object] | None) -> float:
     """``value + tax`` from a tax.calculate result (0 when there is no quote), rounded to cents."""
-    tax = float((tax_quote or {}).get("tax", 0.0))
-    return round(float(value) + tax, 2)
+    tax = float((tax_quote or {}).get("tax", 0.0))  # type: ignore[arg-type]
+    return round(float(value) + tax, 2)  # type: ignore[arg-type]
 
 
-def first(items: list, label: str) -> object:
+def first(items: list[object], label: str) -> object:
     """First element of a collection; ``label`` names the mapping source in the error."""
     if not items:
         raise ValueError(f"{label}: empty collection")

@@ -1,0 +1,111 @@
+name: Platform CI
+
+on:
+  push:
+    branches: [main, platform]
+    paths: ['app/**', 'tests/platform/**', 'tests/demo/**', 'requirements-*.txt', 'Dockerfile.platform',
+            'alembic.platform.ini', 'deploy/**', '.github/workflows/platform-ci.yml']
+  pull_request:
+    paths: ['app/**', 'tests/platform/**', 'tests/demo/**', 'requirements-*.txt', 'Dockerfile.platform',
+            'alembic.platform.ini', 'deploy/**', '.github/workflows/platform-ci.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  RUFF_ARGS: --line-length 120 --select E,F,I,UP,B --extend-exclude app/platform/migrations/versions
+
+jobs:
+  lint-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: 'requirements-*.txt' }
+      - run: pip install -r requirements-platform.txt
+      - name: Ruff
+        run: ruff check $RUFF_ARGS app/platform tests/platform
+      - name: Mypy (strict)
+        run: mypy --strict --ignore-missing-imports --follow-imports=silent app/platform
+
+  test-sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: 'requirements-*.txt' }
+      - run: pip install -r requirements-platform.txt
+      - name: Platform tests (SQLite, subprocess sandbox, simulators over real sockets)
+        run: python -m pytest -c tests/platform/pytest.ini tests/platform -m "not docker and not live_llm"
+      - name: Demo backend tests
+        run: python -m pytest -c tests/demo/pytest.ini tests/demo
+
+  test-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pmaip_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PLATFORM_TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/pmaip_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: 'requirements-*.txt' }
+      - run: pip install -r requirements-platform.txt
+      - name: Migrations upgrade / check / downgrade / upgrade (incl. row-level security)
+        env:
+          PLATFORM_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/pmaip_test
+        run: |
+          alembic -c alembic.platform.ini upgrade head
+          alembic -c alembic.platform.ini check
+          alembic -c alembic.platform.ini downgrade base
+          alembic -c alembic.platform.ini upgrade head
+          alembic -c alembic.platform.ini downgrade base
+      - name: Platform tests on PostgreSQL (incl. RLS tests)
+        run: python -m pytest -c tests/platform/pytest.ini tests/platform -m "not docker and not live_llm"
+
+  sandbox-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: 'requirements-*.txt' }
+      - run: pip install -r requirements-platform.txt
+      - run: docker pull python:3.12-slim
+      - name: Docker sandbox tests (no network, read-only, non-root, resource limits)
+        run: python -m pytest -c tests/platform/pytest.ini tests/platform/sandbox -m docker
+
+  evals-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: 'requirements-*.txt' }
+      - run: pip install -r requirements-platform.txt
+      - name: Mapping-accuracy regression gate (deterministic predictor)
+        run: python -m app.platform.evals gate --baseline app/platform/evals/baseline.json
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image
+        run: docker build -f Dockerfile.platform -t pmaip-platform:ci .
+      - name: Image refuses unsafe production config
+        run: |
+          if docker run --rm pmaip-platform:ci python -c "from app.platform.app import create_app; create_app()"; then
+            echo "expected the production image to refuse missing secrets"; exit 1
+          fi

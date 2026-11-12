@@ -56,101 +56,116 @@ def child_env(workdir: str) -> dict[str, str]:
 
 def _posix_limits(memory_mb: int) -> Callable[[], None]:
     def apply() -> None:  # runs in the child between fork and exec
-        import resource
+        if sys.platform != "win32":  # never called on Windows; also narrows for type checkers
+            import resource
 
-        mem = memory_mb * 1024 * 1024
-        resource.setrlimit(resource.RLIMIT_AS, (mem, mem))
-        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-        resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_FILE_BYTES, MAX_FILE_BYTES))
+            mem = memory_mb * 1024 * 1024
+            resource.setrlimit(resource.RLIMIT_AS, (mem, mem))
+            resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+            resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_FILE_BYTES, MAX_FILE_BYTES))
 
     return apply
 
 
-class _WindowsJob:
-    """A Job Object capping one process's memory; closing it kills the process."""
+if sys.platform == "win32":
+    class _WindowsJob:
+        """A Job Object capping one process's memory; closing it kills the process."""
 
-    def __init__(self, pid: int, memory_mb: int) -> None:
-        import ctypes
-        from ctypes import wintypes
+        def __init__(self, pid: int, memory_mb: int) -> None:
+            import ctypes
+            from ctypes import wintypes
 
-        class IoCounters(ctypes.Structure):
-            _fields_ = [
-                (name, ctypes.c_ulonglong)
-                for name in ("Read", "Write", "Other", "ReadBytes", "WriteBytes", "OtherBytes")
-            ]
+            class IoCounters(ctypes.Structure):
+                _fields_ = [
+                    (name, ctypes.c_ulonglong)
+                    for name in ("Read", "Write", "Other", "ReadBytes", "WriteBytes", "OtherBytes")
+                ]
 
-        class BasicLimits(ctypes.Structure):
-            _fields_ = [
-                ("PerProcessUserTimeLimit", ctypes.c_int64),
-                ("PerJobUserTimeLimit", ctypes.c_int64),
-                ("LimitFlags", wintypes.DWORD),
-                ("MinimumWorkingSetSize", ctypes.c_size_t),
-                ("MaximumWorkingSetSize", ctypes.c_size_t),
-                ("ActiveProcessLimit", wintypes.DWORD),
-                ("Affinity", ctypes.c_size_t),
-                ("PriorityClass", wintypes.DWORD),
-                ("SchedulingClass", wintypes.DWORD),
-            ]
+            class BasicLimits(ctypes.Structure):
+                _fields_ = [
+                    ("PerProcessUserTimeLimit", ctypes.c_int64),
+                    ("PerJobUserTimeLimit", ctypes.c_int64),
+                    ("LimitFlags", wintypes.DWORD),
+                    ("MinimumWorkingSetSize", ctypes.c_size_t),
+                    ("MaximumWorkingSetSize", ctypes.c_size_t),
+                    ("ActiveProcessLimit", wintypes.DWORD),
+                    ("Affinity", ctypes.c_size_t),
+                    ("PriorityClass", wintypes.DWORD),
+                    ("SchedulingClass", wintypes.DWORD),
+                ]
 
-        class ExtendedLimits(ctypes.Structure):
-            _fields_ = [
-                ("BasicLimitInformation", BasicLimits),
-                ("IoInfo", IoCounters),
-                ("ProcessMemoryLimit", ctypes.c_size_t),
-                ("JobMemoryLimit", ctypes.c_size_t),
-                ("PeakProcessMemoryUsed", ctypes.c_size_t),
-                ("PeakJobMemoryUsed", ctypes.c_size_t),
-            ]
+            class ExtendedLimits(ctypes.Structure):
+                _fields_ = [
+                    ("BasicLimitInformation", BasicLimits),
+                    ("IoInfo", IoCounters),
+                    ("ProcessMemoryLimit", ctypes.c_size_t),
+                    ("JobMemoryLimit", ctypes.c_size_t),
+                    ("PeakProcessMemoryUsed", ctypes.c_size_t),
+                    ("PeakJobMemoryUsed", ctypes.c_size_t),
+                ]
 
-        job_extended_limit_information = 9
-        limit_active_process = 0x0008
-        limit_process_memory = 0x0100
-        limit_kill_on_job_close = 0x2000
-        process_set_quota = 0x0100
-        process_terminate = 0x0001
+            job_extended_limit_information = 9
+            limit_active_process = 0x0008
+            limit_process_memory = 0x0100
+            limit_kill_on_job_close = 0x2000
+            process_set_quota = 0x0100
+            process_terminate = 0x0001
 
-        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        k32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
-        k32.CreateJobObjectW.restype = wintypes.HANDLE
-        k32.SetInformationJobObject.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
-        k32.SetInformationJobObject.restype = wintypes.BOOL
-        k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-        k32.OpenProcess.restype = wintypes.HANDLE
-        k32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
-        k32.AssignProcessToJobObject.restype = wintypes.BOOL
-        k32.CloseHandle.argtypes = [wintypes.HANDLE]
-        k32.CloseHandle.restype = wintypes.BOOL
-        self._k32 = k32
+            # Narrows for type checkers too: the Win32-only ctypes API below is checked on Windows only.
+            k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            k32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+            k32.CreateJobObjectW.restype = wintypes.HANDLE
+            k32.SetInformationJobObject.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+            k32.SetInformationJobObject.restype = wintypes.BOOL
+            k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+            k32.OpenProcess.restype = wintypes.HANDLE
+            k32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+            k32.AssignProcessToJobObject.restype = wintypes.BOOL
+            k32.CloseHandle.argtypes = [wintypes.HANDLE]
+            k32.CloseHandle.restype = wintypes.BOOL
+            self._k32 = k32
 
-        job = k32.CreateJobObjectW(None, None)
-        if not job:
-            raise OSError(ctypes.get_last_error(), "CreateJobObjectW failed")
-        self._job: int | None = job
-        info = ExtendedLimits()
-        info.BasicLimitInformation.LimitFlags = limit_process_memory | limit_kill_on_job_close | limit_active_process
-        info.BasicLimitInformation.ActiveProcessLimit = 1
-        info.ProcessMemoryLimit = memory_mb * 1024 * 1024
-        try:
-            if not k32.SetInformationJobObject(job, job_extended_limit_information, ctypes.byref(info),
-                                               ctypes.sizeof(info)):
-                raise OSError(ctypes.get_last_error(), "SetInformationJobObject failed")
-            proc = k32.OpenProcess(process_set_quota | process_terminate, False, pid)
-            if not proc:
-                raise OSError(ctypes.get_last_error(), "OpenProcess failed")
+            job = k32.CreateJobObjectW(None, None)
+            if not job:
+                raise OSError(ctypes.get_last_error(), "CreateJobObjectW failed")
+            self._job: int | None = job
+            info = ExtendedLimits()
+            flags = limit_process_memory | limit_kill_on_job_close | limit_active_process
+            info.BasicLimitInformation.LimitFlags = flags
+            info.BasicLimitInformation.ActiveProcessLimit = 1
+            info.ProcessMemoryLimit = memory_mb * 1024 * 1024
             try:
-                if not k32.AssignProcessToJobObject(job, proc):
-                    raise OSError(ctypes.get_last_error(), "AssignProcessToJobObject failed")
-            finally:
-                k32.CloseHandle(proc)
-        except BaseException:
-            self.close()
-            raise
+                if not k32.SetInformationJobObject(job, job_extended_limit_information, ctypes.byref(info),
+                                                   ctypes.sizeof(info)):
+                    raise OSError(ctypes.get_last_error(), "SetInformationJobObject failed")
+                proc = k32.OpenProcess(process_set_quota | process_terminate, False, pid)
+                if not proc:
+                    raise OSError(ctypes.get_last_error(), "OpenProcess failed")
+                try:
+                    if not k32.AssignProcessToJobObject(job, proc):
+                        raise OSError(ctypes.get_last_error(), "AssignProcessToJobObject failed")
+                finally:
+                    k32.CloseHandle(proc)
+            except BaseException:
+                self.close()
+                raise
 
-    def close(self) -> None:
-        """Closing the last handle kills every process in the job (KILL_ON_JOB_CLOSE)."""
-        if self._job:
-            self._k32.CloseHandle(self._job)
-            self._job = None
+        def close(self) -> None:
+            """Closing the last handle kills every process in the job (KILL_ON_JOB_CLOSE)."""
+            if self._job:
+                self._k32.CloseHandle(self._job)
+                self._job = None
+
+else:
+
+    class _WindowsJob:
+        """Job Objects exist only on Windows; POSIX uses setrlimit in the child instead."""
+
+        def __init__(self, pid: int, memory_mb: int) -> None:
+            raise OSError("Job Objects exist only on Windows")
+
+        def close(self) -> None:
+            return None
 
 
 class SubprocessSandbox(ProcessSandbox):
@@ -169,7 +184,7 @@ class SubprocessSandbox(ProcessSandbox):
     async def launch(self, limits: SandboxLimits, *, script: str | None = None) -> Child:
         workdir = tempfile.mkdtemp(prefix="pmaip-sbx-")
         kwargs: dict[str, object] = {}
-        if IS_WINDOWS:
+        if sys.platform == "win32":
             import subprocess
 
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW

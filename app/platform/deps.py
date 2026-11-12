@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+from typing import Annotated
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,14 +24,14 @@ def get_database(request: Request) -> Database:
     return db
 
 
-async def get_session(db: Database = Depends(get_database)) -> AsyncIterator[AsyncSession]:
+async def get_session(db: Annotated[Database, Depends(get_database)]) -> AsyncIterator[AsyncSession]:
     """Unscoped session: only for auth flows that run before a tenant is known."""
     async with db.session() as session:
         yield session
 
 
 async def get_tenant_session(
-    principal: Principal = Depends(current_principal), db: Database = Depends(get_database)
+    principal: Annotated[Principal, Depends(current_principal)], db: Annotated[Database, Depends(get_database)]
 ) -> AsyncIterator[AsyncSession]:
     """Session bound to the caller's tenant (auto-filtered reads, guarded writes)."""
     set_log_tenant(principal.tenant_id, principal.user_id)

@@ -1,0 +1,9 @@
+# Minimal Alertmanager config: routes everything to one receiver.
+# Replace the receiver with your pager / Slack / email integration.
+route:
+  receiver: default
+  group_by: [alertname, tenant]
+  group_wait: 30s
+  repeat_interval: 4h
+receivers:
+  - name: default
