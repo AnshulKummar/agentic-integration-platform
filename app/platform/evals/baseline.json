@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "suite": "all",
+  "predictor": "deterministic",
+  "seed": 1234,
+  "options": {
+    "family_retrieval": true
+  },
+  "git_sha": "df512eca68d3fbd0b2cefe0bb9e27d094e4a70ba",
+  "created_at": "2026-11-12T19:34:16.774775+00:00",
+  "generated_from": "reports/evals/baseline_run.json",
+  "tolerance": {
+    "f1_drop_abs": 0.02,
+    "edits_per_case_rise_abs": 0.25,
+    "note": "The deterministic predictor is exactly reproducible for a given seed, so any change is a code or data change. A run fails the gate when, for any suite, F1 drops by more than f1_drop_abs (absolute, 0-1 scale) or mean human edits per case rise by more than edits_per_case_rise_abs. 0.02 F1 is ~1.4 mapping decisions on the hand-labeled set and ~0.25 edits/case is ~18 edits on the synthetic suite: small enough to catch real regressions, loose enough to allow deliberate trade-offs that are recorded by regenerating this file."
+  },
+  "metrics": {
+    "synthetic": {
+      "f1": 0.4567,
+      "precision": 0.4823,
+      "recall": 0.4336,
+      "edits_per_case": 4.9028,
+      "abstention_accuracy": 0.5536,
+      "transform_accuracy": 0.8793
+    },
+    "handlabeled": {
+      "f1": 0.1849,
+      "precision": 0.1979,
+      "recall": 0.1735,
+      "edits_per_case": 12.0526,
+      "abstention_accuracy": 0.5152,
+      "transform_accuracy": 0.7632
+    }
+  }
+}
