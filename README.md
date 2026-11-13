@@ -2,10 +2,11 @@
 
 **An AI agent that builds, ships and maintains your SaaS integrations, and remembers how *your* company does things.**
 
-[Live click-through demo](https://anshulkummar.github.io/agentic-integration-platform/) · [Try it in 5 minutes](#try-it-in-5-minutes) · [Use it as a framework](#use-it-as-a-framework) · [Technical details](#technical-details-for-engineers)
+[Paper overview slides](https://anshulkummar.github.io/agentic-integration-platform/slides/) · [Live click-through demo](https://anshulkummar.github.io/agentic-integration-platform/) · [Try it in 5 minutes](#try-it-in-5-minutes) · [Use it as a framework](#use-it-as-a-framework) · [Technical details](#technical-details-for-engineers)
 
 This repository accompanies the paper *Agentic integration of platform APIs for digital product management* (PMAIP), by Shiv Yadav, Anshul Kumar and Nitin Joglekar (DSI 2026). It contains:
 
+- a [click-through presentation](https://anshulkummar.github.io/agentic-integration-platform/slides/) of the paper, the KG demo and the measured results (use ← / →; it also works on phones);
 - the clickable demo shown at the conference;
 - a working, multi-tenant platform that implements the paper's ideas end to end;
 - the evaluation data behind every number below.
@@ -148,6 +149,7 @@ More ways to explore:
 |---|---|
 | The API with interactive docs | `uvicorn app.platform.main:app`, then open http://127.0.0.1:8000/docs |
 | The conference click-through UI | `cd demo && npm ci && npm run dev` (or use the [live link](https://anshulkummar.github.io/agentic-integration-platform/)) |
+| The paper-overview slides | [live link](https://anshulkummar.github.io/agentic-integration-platform/slides/); source: `demo/public/slides/index.html` |
 | The full stack (Postgres, worker, simulators, Prometheus, Grafana) | `cp .env.platform.example .env.platform`, fill it in, then `docker compose -f docker-compose.platform.yml --env-file .env.platform up --build` |
 | The mapping evals, free and deterministic | `python -m app.platform.evals run --suite all` |
 | The live LLM evals (needs `ANTHROPIC_API_KEY`; hard cost cap) | `PLATFORM_EVAL_COST_CAP_USD=5 python -m app.platform.evals run --predictor live_llm` |
@@ -217,7 +219,7 @@ flowchart LR
 | `app/platform/simulators/` | CRM, e-signature and billing simulators: OAuth, rate limits, signed webhooks, fault injection. |
 | `app/platform/quickstart.py` | The 5-minute walkthrough (also run as a test). |
 | `app/demo/` | Domain logic shared with the conference demo: schema alignment, mapping drafter, KG learning, OpenAPI diff. |
-| `demo/` | The click-through UI (React + Vite), deployed to GitHub Pages. |
+| `demo/` | The click-through UI (React + Vite) and the slides (`demo/public/slides/`), deployed to GitHub Pages. |
 | `deploy/` | Prometheus, Alertmanager, Grafana and Postgres role setup. |
 | `reports/evals/` | Every eval report behind the numbers above. |
 | `app/api`, `app/services`, `frontend/`, … | The upstream project this was forked from (see [Origins](#origins)); not used by the platform. |

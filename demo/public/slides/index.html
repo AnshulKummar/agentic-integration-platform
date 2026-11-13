@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PMAIP Paper Overview</title>
+<meta name="description" content="Click-through overview of the PMAIP paper (DSI 2026) and its self-improving knowledge graph demo, with measured results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #e9e8e3;
+  --surface: #fcfcfb;
+  --surface-2: #f2f1ed;
+  --border: #dedcd5;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #7a7973;
+  --accent: #3b5bdb;
+  --llm: #2f8fd8;
+  --kg: #d6453d;
+  --mcp: #2f9e5b;
+  --gov: #8a5cd6;
+  --ok: #2f9e5b;
+  --warn: #b7791f;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --grid: #e4e2dc;
+  --shadow: 0 10px 40px rgba(0, 0, 0, .10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0e0e0d;
+    --surface: #1a1a19;
+    --surface-2: #232321;
+    --border: #34332f;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --muted: #8f8e86;
+    --accent: #7c95ff;
+    --llm: #5cb1f0;
+    --kg: #f06a5f;
+    --mcp: #4fc27f;
+    --gov: #ac85ef;
+    --ok: #4fc27f;
+    --warn: #e2a93a;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --grid: #2c2b28;
+    --shadow: 0 10px 40px rgba(0, 0, 0, .5);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e0e0d;
+  --surface: #1a1a19;
+  --surface-2: #232321;
+  --border: #34332f;
+  --text: #f0efec;
+  --text-2: #c3c2b7;
+  --muted: #8f8e86;
+  --accent: #7c95ff;
+  --llm: #5cb1f0;
+  --kg: #f06a5f;
+  --mcp: #4fc27f;
+  --gov: #ac85ef;
+  --ok: #4fc27f;
+  --warn: #e2a93a;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --grid: #2c2b28;
+  --shadow: 0 10px 40px rgba(0, 0, 0, .5);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+code, .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+a { color: var(--accent); }
+
+/* ---------------------------------------------------------------- stage */
+.viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+.stage {
+  width: 1280px; height: 720px;
+  position: relative;
+  transform-origin: center center;
+}
+.slide {
+  position: absolute; inset: 0;
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 56px 72px 64px;
+  display: flex; flex-direction: column;
+  opacity: 0; visibility: hidden;
+  transition: opacity .25s ease;
+  overflow: hidden;
+}
+.slide.active { opacity: 1; visibility: visible; }
+@media (prefers-reduced-motion: reduce) { .slide { transition: none; } }
+
+.kicker {
+  font-size: 15px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 10px;
+}
+h1 { font-size: 54px; line-height: 1.08; margin: 0 0 18px; font-weight: 800; letter-spacing: -.02em; }
+h2 { font-size: 40px; line-height: 1.12; margin: 0 0 22px; font-weight: 750; letter-spacing: -.015em; }
+h3 { font-size: 22px; margin: 0 0 8px; font-weight: 700; }
+p, li { font-size: 21px; line-height: 1.45; color: var(--text-2); }
+p { margin: 0 0 14px; }
+ul { margin: 0; padding-left: 24px; }
+li { margin: 0 0 10px; }
+strong { color: var(--text); }
+.lead { font-size: 25px; line-height: 1.4; color: var(--text-2); max-width: 1000px; }
+.small { font-size: 16px; color: var(--muted); }
+.cite { font-size: 14px; color: var(--muted); }
+.foot {
+  position: absolute; left: 72px; right: 72px; bottom: 22px;
+  display: flex; justify-content: space-between; font-size: 13px; color: var(--muted);
+}
+.grow { flex: 1; min-height: 0; }
+.row { display: flex; gap: 22px; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.card {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px 22px;
+}
+.card p, .card li { font-size: 18px; }
+.tag {
+  display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: .04em;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid currentColor; text-transform: uppercase;
+}
+.llm { color: var(--llm); } .kg { color: var(--kg); } .mcp { color: var(--mcp); } .gov { color: var(--gov); }
+.bar-l { border-left: 5px solid currentColor; }
+.quote {
+  font-size: 23px; line-height: 1.45; color: var(--text); font-style: italic;
+  border-left: 4px solid var(--accent); padding: 6px 0 6px 20px; margin: 4px 0 0;
+}
+
+/* flows */
+.flow { display: flex; align-items: stretch; gap: 0; }
+.step {
+  flex: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 14px; font-size: 16px; color: var(--text-2); line-height: 1.35; position: relative;
+}
+.step b { display: block; color: var(--text); font-size: 17px; margin-bottom: 4px; }
+.arrow { width: 34px; display: grid; place-items: center; color: var(--muted); font-size: 22px; flex: 0 0 34px; }
+.loss { color: var(--kg); font-size: 13px; font-weight: 600; display: block; margin-top: 6px; }
+
+/* sequence (fig 2/3) */
+.seq { display: grid; grid-template-columns: 150px repeat(4, 1fr); gap: 8px 10px; align-items: center; }
+.seq .actor { font-weight: 700; font-size: 16px; text-align: center; padding: 8px; border-radius: 8px; border: 2px solid currentColor; }
+.seq .lbl { font-size: 15px; color: var(--muted); font-weight: 600; }
+.msg { font-size: 15px; line-height: 1.3; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.msg.hl { border-color: var(--accent); }
+
+/* stats */
+.stat { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+.stat .v { font-size: 52px; font-weight: 800; letter-spacing: -.02em; color: var(--text); line-height: 1; }
+.stat .v small { font-size: 22px; font-weight: 600; color: var(--muted); }
+.stat .l { font-size: 16px; color: var(--text-2); margin-top: 8px; line-height: 1.35; }
+
+/* tables */
+table { border-collapse: collapse; width: 100%; font-size: 17px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+th { color: var(--text); font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: .04em; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.yes { color: var(--ok); font-weight: 700; }
+.part { color: var(--warn); font-weight: 700; }
+.no { color: var(--kg); font-weight: 700; }
+
+/* chart */
+.chart-wrap { position: relative; }
+.chart text { fill: var(--text-2); font-family: Inter, sans-serif; font-size: 14px; }
+.chart .axis-title { fill: var(--muted); font-size: 13px; }
+.chart .gridline { stroke: var(--grid); stroke-width: 1; }
+.chart .baseline { stroke: var(--muted); stroke-width: 1; }
+.tooltip {
+  position: absolute; pointer-events: none; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 14px;
+  box-shadow: var(--shadow); opacity: 0; transition: opacity .1s; white-space: nowrap; z-index: 2;
+}
+.legend { display: flex; gap: 18px; font-size: 15px; color: var(--text-2); align-items: center; }
+.legend i { display: inline-block; width: 22px; height: 3px; border-radius: 2px; margin-right: 7px; vertical-align: middle; }
+.btn {
+  font: inherit; font-size: 14px; color: var(--text-2); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; cursor: pointer;
+}
+.btn:hover { color: var(--text); }
+.btn:focus-visible, .nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* title & divider */
+.title-slide { justify-content: center; }
+.title-slide h1 { font-size: 58px; max-width: 1080px; }
+.authors { font-size: 20px; color: var(--text-2); margin-top: 10px; }
+.agents-strip { display: flex; gap: 10px; margin-top: 30px; }
+.divider { justify-content: center; background: linear-gradient(135deg, var(--surface) 55%, var(--surface-2)); }
+.divider h1 { font-size: 64px; }
+
+/* nav chrome */
+.nav {
+  position: fixed; left: 0; right: 0; bottom: 0; height: 44px;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  color: var(--muted); font-size: 14px; z-index: 5;
+}
+.nav button {
+  font: inherit; background: var(--surface); color: var(--text-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 4px 12px; cursor: pointer;
+}
+.nav button:hover { color: var(--text); }
+.progress { position: fixed; left: 0; top: 0; height: 3px; background: var(--accent); z-index: 6; transition: width .2s; }
+.help { position: fixed; right: 14px; top: 10px; font-size: 12px; color: var(--muted); z-index: 5; }
+
+/* ---------------------------------------------------------------- phone: stacked scroll */
+@media (max-width: 760px) {
+  body { overflow: auto; }
+  .viewport { position: static; display: block; padding: 12px 16px 70px; }
+  .stage { width: auto; height: auto; transform: none !important; }
+  .slide {
+    position: relative; opacity: 1; visibility: visible; margin: 0 0 16px;
+    padding: 28px 20px 46px; min-height: 0;
+  }
+  h1, .title-slide h1, .divider h1 { font-size: 32px; }
+  h2 { font-size: 26px; }
+  p, li, .lead, .quote { font-size: 17px; }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .flow { flex-direction: column; }
+  .arrow { width: auto; height: 22px; transform: rotate(90deg); }
+  .seq { grid-template-columns: 1fr; }
+  .seq .lbl { margin-top: 6px; }
+  .stat .v { font-size: 38px; }
+  .row { flex-direction: column; }
+  table { font-size: 14px; }
+  th, td { padding: 6px 6px; }
+  .slide { padding-bottom: 20px; }
+  .foot { position: static; margin-top: 18px; gap: 12px; }
+  .agents-strip { flex-wrap: wrap; }
+  .seq .actor { display: none; }
+  .seq .msg { grid-column: auto !important; }
+  .seq .msg::before { content: attr(data-who); display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  .nav, .help, .progress { display: none; }
+  .chart-wrap svg { width: 100%; height: auto; }
+}
+
+/* print: one slide per page */
+@media print {
+  body { overflow: visible; background: #fff; }
+  .viewport { position: static; display: block; }
+  .stage { transform: none !important; width: 1280px; height: auto; }
+  .slide { position: relative; opacity: 1; visibility: visible; page-break-after: always; box-shadow: none; height: 720px; }
+  .nav, .help, .progress { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="help" aria-hidden="true">← → to navigate · F fullscreen · T theme</div>
+
+<main class="viewport" id="viewport">
+<div class="stage" id="stage">
+
+<!-- 1. Title -->
+<section class="slide title-slide" aria-label="Title">
+  <p class="kicker">Decision Sciences Institute · 2026</p>
+  <h1>Agentic integration of platform APIs for digital product management</h1>
+  <p class="lead">PMAIP: a multiagent platform that turns plain-English integration intent into deployed SaaS integrations, and a knowledge graph that remembers how your company does things.</p>
+  <p class="authors"><strong>Shiv Yadav</strong> · <strong>Anshul Kumar</strong> · <strong>Nitin Joglekar</strong></p>
+  <div class="agents-strip">
+    <span class="tag llm">LLM agents</span><span class="tag kg">Knowledge graph agents</span><span class="tag mcp">MCP agents</span>
+  </div>
+  <div class="foot"><span>Paper overview → KG demo → measured results</span><span>Press → to begin</span></div>
+</section>
+
+<!-- 2. Problem -->
+<section class="slide" aria-label="The integration bottleneck">
+  <p class="kicker">The problem</p>
+  <h2>Integration is the bottleneck of SaaS product management</h2>
+  <p>Traditional integration is <strong>code-centric</strong>: every hand-off translates the need again, and each translation adds delay and loses information.</p>
+  <div class="flow" style="margin:18px 0 26px">
+    <div class="step"><b>Business need</b>"New signed customers should flow into finance."</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Technical spec</b>Fields, endpoints, auth<span class="loss">latency · information loss</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Code</b>Glue code per vendor pair<span class="loss">latency · information loss</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Integrate &amp; test</b>Against real use cases<span class="loss">rework when APIs change</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>Brittleness amplification</h3><p>Each integration point adds dependencies that multiply across the system, so the burden grows faster than the number of integrations.</p></div>
+    <div class="card"><h3>The business cost</h3><p>PMs and skilled engineers spend their time on connectivity instead of customers: delayed customization, stalled sales cycles, mounting technical debt.</p></div>
+  </div>
+  <div class="foot"><span>Paper: Introduction</span><span>2</span></div>
+</section>
+
+<!-- 3. Why now -->
+<section class="slide" aria-label="Why now">
+  <p class="kicker">Why now</p>
+  <h2>Three technologies make a different approach viable</h2>
+  <div class="grid3 grow" style="margin-top:8px">
+    <div class="card bar-l llm"><span class="tag llm">LLMs</span><h3 style="margin-top:12px">Understand intent</h3><p>Read natural-language requirements and API docs; plan, generate and test integration code.</p></div>
+    <div class="card bar-l kg"><span class="tag kg">Knowledge graphs</span><h3 style="margin-top:12px">Encode business meaning</h3><p>Semantic relationships between systems, objects and processes; GraphRAG grounds LLM reasoning in them.</p></div>
+    <div class="card bar-l mcp"><span class="tag mcp">Model Context Protocol</span><h3 style="margin-top:12px">Standard tool access</h3><p>Plug-and-play agent access to APIs, with context carried across sessions. REST APIs can be wrapped as MCP tools automatically.</p></div>
+  </div>
+  <p class="small" style="margin-top:18px">Thousands of MCP servers were deployed by 2025, and enterprise-grade agentic frameworks matured, which makes multiagent integration practical at scale.</p>
+  <div class="foot"><span>Paper: Introduction; Literature review</span><span>3</span></div>
+</section>
+
+<!-- 4. Intent-centric -->
+<section class="slide" aria-label="Intent-centric development">
+  <p class="kicker">The core idea</p>
+  <h2>From code-centric to intent-centric development</h2>
+  <p>End users, PMs and technical teams describe the <strong>business outcome</strong> in their own words. Agents interpret, plan, generate, test and deploy.</p>
+  <p class="quote">"When a new sales prospect signs the deal, create a contract using a document signing application, and send the prospect data to our finance system once the customer has completed the agreement."</p>
+  <div class="grid2" style="margin-top:26px">
+    <div class="card"><h3>Semantic compression</h3><p>No translation through technical intermediaries. Requirements stay in the business's native vocabulary.</p></div>
+    <div class="card"><h3>Parallel agents</h3><p>Multiple agent instances work on different parts of the request at the same time (Fig. 1), instead of a sequential hand-off chain.</p></div>
+  </div>
+  <div class="foot"><span>Paper: Fig. 1, intent-centric process</span><span>4</span></div>
+</section>
+
+<!-- 5. Architecture -->
+<section class="slide" aria-label="PMAIP architecture">
+  <p class="kicker">System architecture</p>
+  <h2>PMAIP: three agent types that collaborate</h2>
+  <div class="grid3" style="margin-top:6px">
+    <div class="card bar-l llm"><span class="tag llm">LLM agent</span><h3 style="margin-top:12px">Interprets &amp; generates</h3><ul><li>Clarifies intent, source and target systems</li><li>Synthesizes context into an integration plan</li><li>Generates integration code</li></ul></div>
+    <div class="card bar-l kg"><span class="tag kg">KG agent</span><h3 style="margin-top:12px">Remembers &amp; grounds</h3><ul><li>Prior integrations, schema mappings, patterns</li><li>Semantic equivalence across systems</li><li>Institutional memory, updated after each integration</li></ul></div>
+    <div class="card bar-l mcp"><span class="tag mcp">MCP agent</span><h3 style="margin-top:12px">Connects &amp; deploys</h3><ul><li>Tests API connectivity</li><li>Deploys and tests against live endpoints</li><li>Standard interfaces, no per-tool plumbing</li></ul></div>
+  </div>
+  <p class="small" style="margin-top:20px">Workflow: (1) accept intent and start a conversation → (2) query the KG with the conversation and history → (3) generate and test code → (4) return results with options to refine.</p>
+  <div class="foot"><span>Paper: System architecture; Implementation</span><span>5</span></div>
+</section>
+
+<!-- 6. Fig 2 / 3 -->
+<section class="slide" aria-label="How the agents collaborate">
+  <p class="kicker">Figures 2 and 3</p>
+  <h2>An intent, a review, a refinement, a deployment</h2>
+  <div class="seq" style="margin-top:4px">
+    <div></div>
+    <div class="actor" style="color:var(--text-2)">User / PM</div>
+    <div class="actor llm">LLM agent</div>
+    <div class="actor kg">KG agent</div>
+    <div class="actor mcp">MCP agent</div>
+
+    <div class="lbl">Fig. 2 · initial intent</div>
+    <div data-who="User / PM" class="msg hl">"Connect our CRM to our billing system."</div>
+    <div data-who="LLM agent" class="msg">Plans; asks the KG for prior CRM integrations</div>
+    <div data-who="KG agent" class="msg">Returns schema mappings and patterns</div>
+    <div data-who="MCP agent" class="msg">Tests API connectivity</div>
+
+    <div class="lbl">Plan</div>
+    <div data-who="User / PM" class="msg">Reviews the plan and options</div>
+    <div class="msg" data-who="LLM, KG, MCP agents" style="grid-column: span 3">Integration plan presented with options</div>
+
+    <div class="lbl">Fig. 3 · follow-on</div>
+    <div data-who="User / PM" class="msg hl">"Modify to include tax calculations."</div>
+    <div data-who="LLM agent" class="msg">Stores the modification</div>
+    <div data-who="KG agent" class="msg">Returns tax-calculation patterns</div>
+    <div data-who="MCP agent" class="msg">–</div>
+
+    <div class="lbl">Approve &amp; deploy</div>
+    <div data-who="User / PM" class="msg hl">Approves the updated plan</div>
+    <div data-who="LLM agent" class="msg">Finalizes configuration</div>
+    <div data-who="KG agent" class="msg">Learns for next time</div>
+    <div data-who="MCP agent" class="msg">Deploys the final configuration</div>
+  </div>
+  <div class="foot"><span>Paper: Fig. 2 and Fig. 3</span><span>6</span></div>
+</section>
+
+<!-- 7. KG -->
+<section class="slide" aria-label="The knowledge graph">
+  <p class="kicker">The knowledge graph</p>
+  <h2>Semantic grounding and institutional memory</h2>
+  <div class="grid2 grow">
+    <div class="col">
+      <div class="card"><h3>Same entity, different systems</h3><p>A CRM <code>Account</code> and an ERP <code>Customer</code> are the same business entity, despite different field names, types and validation rules.</p></div>
+      <div class="card"><h3>Business processes, not just fields</h3><p>Encodes how entities take part in processes: order status, payment terms, fulfillment. Generated code handles the workflow, not only the data mapping.</p></div>
+    </div>
+    <div class="col">
+      <div class="card bar-l kg"><h3>Institutional memory</h3><p>It tracks customer needs, interoperability patterns and field-specific handling, and is <strong>updated after every integration</strong> for the next one.</p></div>
+      <div class="card"><h3>In a company, that means…</h3><ul><li>"Our ERP wants the <em>legal</em> company name"</li><li>"Never sync the sales rep; the ERP assigns it"</li><li>"<code>UDF_07</code> is our sales region"</li></ul></div>
+    </div>
+  </div>
+  <div class="foot"><span>Paper: Knowledge graph component; Findings</span><span>7</span></div>
+</section>
+
+<!-- 8. Findings: capability -->
+<section class="slide" aria-label="Findings: capability redistribution">
+  <p class="kicker">Findings (observational)</p>
+  <h2>Integration capability moves closer to the business</h2>
+  <div class="row" style="align-items:stretch">
+    <div class="stat" style="flex:0 0 330px"><div class="v">1–4 wks <small>→</small> 1–4 days</div><div class="l">Observed interaction cycle, conventional vs agentic integration, so several intent options can be tried in parallel</div></div>
+    <div class="col" style="flex:1">
+      <div class="card"><h3>Task reallocation</h3><p>Business users prototype integrations directly instead of queuing for engineering. New hybrid roles appear: PMs and end users grow skills in data modeling and workflow design.</p></div>
+      <div class="card bar-l gov"><h3>Integration governance</h3><p>Empowerment needs controls: decision rights, quality standards and approval processes for business-user-generated integrations.</p></div>
+    </div>
+  </div>
+  <p class="cite" style="margin-top:16px">Based on the authors' experience and conversations with product managers (a convenience sample).</p>
+  <div class="foot"><span>Paper: Findings, capability redistribution</span><span>8</span></div>
+</section>
+
+<!-- 9. Competitive dynamics -->
+<section class="slide" aria-label="Competitive dynamics">
+  <p class="kicker">Findings</p>
+  <h2>Integration becomes a strategic advantage</h2>
+  <p>Accumulated integration pattern libraries may create network effects: <strong>each new integration teaches the system</strong> about API patterns, transformations and edge cases, so the advantage <strong>compounds over time</strong>.</p>
+  <table style="margin-top:14px">
+    <thead><tr><th>Wessel et al. (2025) mechanism</th><th>How PMAIP instantiates it</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Intelligent automation</strong></td><td>Automates integration code generation</td></tr>
+      <tr><td><strong>Democratization</strong></td><td>Integration capability beyond engineering teams</td></tr>
+      <tr><td><strong>Hyper-personalization</strong></td><td>Integrations tailored to individual customers</td></tr>
+      <tr><td><strong>Collaborative innovation</strong></td><td>End users and the platform build together</td></tr>
+    </tbody>
+  </table>
+  <div class="foot"><span>Paper: Competitive dynamics</span><span>9</span></div>
+</section>
+
+<!-- 10. Divider -->
+<section class="slide divider" aria-label="The demo">
+  <p class="kicker">Part 2</p>
+  <h1>The demo: a self-improving knowledge graph</h1>
+  <p class="lead">Two loops. One a PM starts with an intent; one the agent starts on its own when a vendor ships a new API. Then: what we measured.</p>
+  <p style="margin-top:20px"><a href="../" target="_blank" rel="noopener">Open the live click-through demo ↗</a></p>
+  <div class="foot"><span>Generic product names throughout</span><span>10</span></div>
+</section>
+
+<!-- 11. Cast -->
+<section class="slide" aria-label="The demo scenario">
+  <p class="kicker">Demo scenario</p>
+  <h2>A CRM company and its partners</h2>
+  <div class="grid2">
+    <div class="col">
+      <div class="card"><h3>Systems</h3><ul><li><strong>CRM Platform</strong> (ours): the PM owns its roadmap</li><li><strong>Billing / ERP</strong> and <strong>Tax Service</strong>: finance</li><li><strong>e-Signature App</strong>: contract signing</li></ul></div>
+      <div class="card"><h3>Seeded knowledge graph</h3><p>Systems, business objects, fields, endpoints, processes and the product roadmap.</p></div>
+    </div>
+    <div class="card"><h3>Roadmap</h3>
+      <table>
+        <tr><td>Billing sync (closed-won → customer)</td><td class="part">Now</td></tr>
+        <tr><td>Contract-to-cash automation</td><td class="no">Blocked</td></tr>
+        <tr><td colspan="2" class="small">blocked because e-Signature v2 has no "agreement completed" event or signed-field API</td></tr>
+        <tr><td>Self-serve renewals</td><td>Later</td></tr>
+        <tr><td>AI pipeline forecasting</td><td>Later</td></tr>
+        <tr><td>Send contract for signature</td><td class="yes">Shipped</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="foot"><span>Demo: setup</span><span>11</span></div>
+</section>
+
+<!-- 12. Loop 1 -->
+<section class="slide" aria-label="Loop 1">
+  <p class="kicker">Loop 1 · intent-driven (paper Figs 2–3)</p>
+  <h2>A PM's intent becomes a live integration</h2>
+  <div class="flow" style="margin-top:6px">
+    <div class="step"><b>Intent</b>"Connect CRM to billing so closed-won accounts become customers, with tax."</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Draft</b>KG-grounded plan: 6 field mappings, runnable code, risks, tests</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Review</b>Engineer corrects <strong>3</strong>: currency format, payment terms, tax geo</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Approve</b>Product <em>and</em> engineering; the author can't approve</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Ship</b>sandbox → staging → canary → production, health-checked</div>
+  </div>
+  <div class="card bar-l kg" style="margin-top:26px"><h3>Then the KG learns</h3><p>A reusable <strong>CRM → billing pattern</strong> and the engineer's <strong>3 corrections as rules</strong>, available to every future integration of this company.</p></div>
+  <div class="foot"><span>Demo: Loop 1</span><span>12</span></div>
+</section>
+
+<!-- 13. Loop 2 -->
+<section class="slide" aria-label="Loop 2">
+  <p class="kicker">Loop 2 · agent-initiated</p>
+  <h2>A vendor ships a new API. The agent acts first.</h2>
+  <div class="flow" style="margin-top:6px">
+    <div class="step"><b>New release</b>e-Signature App API v3.0 is published</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Analyze</b>Spec diff; new endpoints become agent tools; <code>signer_email</code> flagged deprecated</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Match roadmap</b>Unblocks <strong>Contract-to-cash</strong> (fit 0.91)</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Draft on its own</b>9 mappings, <strong>7 reused from the KG</strong></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Approve &amp; ship</b>Same dual approval and staged rollout</div>
+  </div>
+  <div class="grid2" style="margin-top:24px">
+    <div class="stat"><div class="v">7 / 9</div><div class="l">mappings reused from what the engineer taught it in Loop 1</div></div>
+    <div class="stat"><div class="v">0 / 9</div><div class="l">reused when KG learning is switched off (the ablation): the same corrections are needed again</div></div>
+  </div>
+  <div class="foot"><span>Demo: Loop 2 · paper: "as APIs evolve", compound advantage</span><span>13</span></div>
+</section>
+
+<!-- 14. Platform -->
+<section class="slide" aria-label="From prototype to platform">
+  <p class="kicker">Beyond the paper's prototype</p>
+  <h2>We built it as a multi-tenant platform, then measured it</h2>
+  <div class="grid3">
+    <div class="card"><h3>Trust &amp; access</h3><ul><li>Login, roles, dual approval</li><li>Per-company isolation (incl. row-level security)</li><li>Encrypted vendor credentials</li></ul></div>
+    <div class="card"><h3>Safe execution</h3><ul><li>Generated code runs in a sandbox with no network or secrets</li><li>Connectors generated from OpenAPI</li><li>Audit trail</li></ul></div>
+    <div class="card"><h3>Safe delivery</h3><ul><li>Staged deploys with real health checks</li><li>Automatic rollback on a vendor outage</li><li>Metrics, alerts, dashboards</li></ul></div>
+  </div>
+  <p style="margin-top:22px">The paper's limitations section asks for <strong>"methods for measuring the compound advantage."</strong> So we built an evaluation suite: 72 generated cases, 19 hand-labeled realistic cases, and a pre-registered company-conventions experiment.</p>
+  <div class="foot"><span>Repo: app/platform · app/platform/evals</span><span>14</span></div>
+</section>
+
+<!-- 15. Evidence 1 -->
+<section class="slide" aria-label="Evidence: LLM agent">
+  <p class="kicker">Evidence 1 · realistic hand-labeled cases</p>
+  <h2>The LLM agent removes almost all mapping work</h2>
+  <div class="grid2" style="margin-top:6px">
+    <div class="stat"><div class="v">18.5% <small>→</small> 97.1%</div><div class="l">Fields mapped correctly (F1): classic name matching → Claude agent</div></div>
+    <div class="stat"><div class="v">12.1 <small>→</small> 0.5</div><div class="l">Human corrections per integration: about <strong>23× fewer</strong></div></div>
+  </div>
+  <div class="grid2" style="margin-top:22px">
+    <div class="card"><h3>Trustworthy confidence</h3><p>Every mapping the agent rated ≥ 0.8 confidence was correct, so reviewers can focus on the few low-confidence ones.</p></div>
+    <div class="card"><h3>But: the KG adds nothing here</h3><p>On fields whose meaning is public knowledge, KG on vs off showed <strong>no measurable difference</strong>. There was nothing left to fix.</p></div>
+  </div>
+  <p class="cite" style="margin-top:14px">claude-opus-5-5; 19 cases, 318 labeled target fields; synthetic suite: 45.7% → 99.9% F1. Reports in reports/evals/live/.</p>
+  <div class="foot"><span>Evidence: live LLM evals</span><span>15</span></div>
+</section>
+
+<!-- 16. Evidence 2 (chart) -->
+<section class="slide" aria-label="Evidence: company conventions">
+  <p class="kicker">Evidence 2 · pre-registered experiment</p>
+  <h2>The KG teaches the agent a company's own rules</h2>
+  <div class="row" style="align-items:flex-start">
+    <div style="flex:1.35">
+      <div class="legend" style="margin-bottom:6px">
+        <span><i style="background:var(--series-2)"></i>Without KG</span>
+        <span><i style="background:var(--series-1)"></i>With KG</span>
+        <button class="btn" id="tableToggle" type="button" style="margin-left:auto">Show table</button>
+      </div>
+      <div class="chart-wrap" id="chartWrap">
+        <svg class="chart" id="convChart" viewBox="0 0 640 330" width="640" height="330" role="img" aria-labelledby="convTitle convDesc">
+          <title id="convTitle">Company-convention mistakes per integration, with and without the KG</title>
+          <desc id="convDesc">Without the KG the agent makes about 3.7 convention mistakes on every integration. With the KG it makes 3.3 on the first, then 0.42, 0, 0.25 and 0 on integrations 2 to 5.</desc>
+        </svg>
+        <div class="tooltip" id="tooltip" role="status"></div>
+      </div>
+      <table id="convTable" hidden style="margin-top:8px">
+        <thead><tr><th>Integration #</th><th class="num">Without KG</th><th class="num">With KG</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="col" style="flex:1">
+      <div class="stat"><div class="v">3.5</div><div class="l">corrections saved per integration from #2 on (95% CI 3.3–3.7); the pre-registered success criterion was met</div></div>
+      <div class="card"><p style="margin:0">4 fictional companies × 5 CRM integrations into their ERP. 6 house rules per company (legal vs display name, tax in or out, leave sales rep empty, what <code>UDF_07</code> means…), balanced so <strong>no default guess works</strong>. Fields Claude already knew: 0 errors either way.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>3 replicates · design committed before the run · app/platform/evals/conventions.py</span><span>16</span></div>
+</section>
+
+<!-- 17. Claims -->
+<section class="slide" aria-label="What the evidence says">
+  <p class="kicker">Back to the paper</p>
+  <h2>What the evidence says about the paper's claims</h2>
+  <table>
+    <thead><tr><th style="width:38%">Paper claim</th><th style="width:16%">Status</th><th>What we found</th></tr></thead>
+    <tbody>
+      <tr><td>Intent-centric development accelerates integration</td><td class="yes">Supported</td><td>The LLM agent drafts integrations that need ~23× fewer corrections than name matching</td></tr>
+      <tr><td>The KG holds institutional memory</td><td class="yes">Supported</td><td>After one reviewed integration, company-specific mistakes drop from 3.7 to ~0.2</td></tr>
+      <tr><td>Each integration teaches the system: compound advantage</td><td class="part">Refined</td><td>The gain is fast (one review), then flat. It comes from <em>company</em> knowledge; on public knowledge the LLM alone is already at the ceiling</td></tr>
+      <tr><td>Integration governance is needed</td><td class="yes">Built in</td><td>Dual approval, separation of duties, staged rollout, automatic rollback, audit trail</td></tr>
+      <tr><td>Agents act as APIs evolve</td><td class="yes">Demonstrated</td><td>The agent diffs a new release, flags deprecations and drafts the unblocked roadmap item</td></tr>
+    </tbody>
+  </table>
+  <div class="foot"><span>Synthesis</span><span>17</span></div>
+</section>
+
+<!-- 18. Limitations -->
+<section class="slide" aria-label="Limitations and next steps">
+  <p class="kicker">Honest limits</p>
+  <h2>Limitations and next steps</h2>
+  <div class="grid2">
+    <div class="card"><h3>Limitations</h3><ul>
+      <li>Paper findings: a simplified use case and a convenience sample</li>
+      <li>Evals: one model, one labeler; synthetic, perfectly consistent conventions; real companies have exceptions and drift</li>
+      <li>Vendors are simulators; no real customer data yet</li>
+      <li>Claude + KG context is measured in the evals, not yet wired into the platform's drafting</li>
+    </ul></div>
+    <div class="card"><h3>Next steps</h3><ul>
+      <li>Run the conventions test on a real company's integration history</li>
+      <li>Wire Claude + KG context into drafting; add an approvals UI</li>
+      <li>Longitudinal study of organizational effects and governance (paper's future work)</li>
+      <li>Connect real vendor sandboxes</li>
+    </ul></div>
+  </div>
+  <div class="foot"><span>Paper: Limitations · repo README: Limitations</span><span>18</span></div>
+</section>
+
+<!-- 19. Try it -->
+<section class="slide title-slide" aria-label="Try it">
+  <p class="kicker">Try it</p>
+  <h2>Everything is open source</h2>
+  <div class="grid3" style="margin-top:10px">
+    <div class="card"><h3>Click-through demo</h3><p><a href="../" target="_blank" rel="noopener">anshulkummar.github.io/<wbr>agentic-integration-platform</a></p></div>
+    <div class="card"><h3>Code, evals, README</h3><p><a href="https://github.com/AnshulKummar/agentic-integration-platform" target="_blank" rel="noopener">github.com/AnshulKummar/<wbr>agentic-integration-platform</a></p></div>
+    <div class="card"><h3>5-minute walkthrough</h3><p class="mono" style="font-size:15px">pip install -r requirements-platform.txt<br>python -m app.platform.quickstart</p></div>
+  </div>
+  <p class="authors" style="margin-top:30px">Shiv Yadav · Anshul Kumar · Nitin Joglekar · DSI 2026</p>
+  <div class="foot"><span>Thank you</span><span>19</span></div>
+</section>
+
+</div>
+</main>
+
+<nav class="nav" aria-label="Slide navigation">
+  <button type="button" id="prev" aria-label="Previous slide">←</button>
+  <span id="counter" aria-live="polite">1 / 19</span>
+  <button type="button" id="next" aria-label="Next slide">→</button>
+  <button type="button" id="theme" aria-label="Toggle light or dark theme">Theme</button>
+</nav>
+
+<script>
+(() => {
+  // ------------------------------------------------------------ deck navigation
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const stage = document.getElementById('stage');
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const phone = () => window.matchMedia('(max-width: 760px)').matches;
+  let index = 0;
+
+  function fromHash() {
+    const n = parseInt((location.hash.match(/^#(\d+)$/) || [])[1] || '1', 10);
+    return Math.min(Math.max(n, 1), slides.length) - 1;
+  }
+  function show(i, push) {
+    index = Math.min(Math.max(i, 0), slides.length - 1);
+    slides.forEach((s, k) => {
+      s.classList.toggle('active', k === index);
+      s.setAttribute('aria-hidden', phone() ? 'false' : String(k !== index));
+    });
+    counter.textContent = `${index + 1} / ${slides.length}`;
+    progress.style.width = `${((index + 1) / slides.length) * 100}%`;
+    if (push && location.hash !== `#${index + 1}`) history.replaceState(null, '', `#${index + 1}`);
+  }
+  function fit() {
+    if (phone()) { stage.style.transform = 'none'; return; }
+    const s = Math.min(window.innerWidth / 1320, (window.innerHeight - 52) / 760);
+    stage.style.transform = `scale(${s})`;
+  }
+  document.getElementById('next').addEventListener('click', () => show(index + 1, true));
+  document.getElementById('prev').addEventListener('click', () => show(index - 1, true));
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest && e.target.closest('button, a, input')) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    }
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(index + 1, true); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(index - 1, true); }
+    else if (e.key === 'Home') show(0, true);
+    else if (e.key === 'End') show(slides.length - 1, true);
+    else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    else if (e.key === 't' || e.key === 'T') toggleTheme();
+  });
+  document.getElementById('viewport').addEventListener('click', (e) => {
+    if (phone() || e.target.closest('a, button, .chart-wrap, table')) return;
+    show(e.clientX > window.innerWidth / 2 ? index + 1 : index - 1, true);
+  });
+  let touchX = null;
+  document.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (touchX === null || phone()) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) show(dx < 0 ? index + 1 : index - 1, true);
+    touchX = null;
+  });
+  function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+    } catch (err) { console.warn('fullscreen unavailable', err); }
+  }
+
+  // ------------------------------------------------------------ theme
+  const root = document.documentElement;
+  try {
+    const saved = localStorage.getItem('pmaip-slides-theme');
+    if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
+  } catch (err) { /* storage unavailable: follow the OS theme */ }
+  function toggleTheme() {
+    const dark = root.dataset.theme
+      ? root.dataset.theme === 'dark'
+      : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('pmaip-slides-theme', root.dataset.theme); } catch (err) { /* ignore */ }
+  }
+  document.getElementById('theme').addEventListener('click', toggleTheme);
+
+  window.addEventListener('resize', () => { fit(); show(index, false); });
+  window.addEventListener('hashchange', () => show(fromHash(), false));
+  fit();
+  show(fromHash(), false);
+
+  // ------------------------------------------------------------ conventions chart
+  // Measured: reports/evals/live/conventions.json (3 replicates x 4 companies per point).
+  const data = [
+    { step: 1, off: 3.75, on: 3.33 },
+    { step: 2, off: 3.75, on: 0.42 },
+    { step: 3, off: 3.75, on: 0.00 },
+    { step: 4, off: 3.58, on: 0.25 },
+    { step: 5, off: 3.67, on: 0.00 },
+  ];
+  const svg = document.getElementById('convChart');
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 640, H = 330, m = { l: 56, r: 92, t: 14, b: 50 };
+  const x = (s) => m.l + ((s - 1) / 4) * (W - m.l - m.r);
+  const y = (v) => H - m.b - (v / 4) * (H - m.t - m.b);
+  const el = (tag, attrs, text) => {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (text !== undefined) n.textContent = text;
+    svg.appendChild(n);
+    return n;
+  };
+  for (let v = 0; v <= 4; v++) {
+    el('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: v === 0 ? 'baseline' : 'gridline' });
+    el('text', { x: m.l - 10, y: y(v) + 5, 'text-anchor': 'end' }, String(v));
+  }
+  data.forEach((d) => el('text', { x: x(d.step), y: H - m.b + 22, 'text-anchor': 'middle' }, `#${d.step}`));
+  el('text', { x: (m.l + W - m.r) / 2, y: H - 6, 'text-anchor': 'middle', class: 'axis-title' }, 'Integration number (same company, new source system each time)');
+  el('text', { x: 14, y: (m.t + H - m.b) / 2, 'text-anchor': 'middle', class: 'axis-title', transform: `rotate(-90 14 ${(m.t + H - m.b) / 2})` }, 'Convention mistakes');
+  const series = [
+    { key: 'off', name: 'Without KG', color: 'var(--series-2)' },
+    { key: 'on', name: 'With KG', color: 'var(--series-1)' },
+  ];
+  series.forEach((s) => {
+    el('path', {
+      d: data.map((d, i) => `${i ? 'L' : 'M'}${x(d.step)},${y(d[s.key])}`).join(' '),
+      fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round',
+    });
+    data.forEach((d) => el('circle', { cx: x(d.step), cy: y(d[s.key]), r: 4.5, fill: s.color, stroke: 'var(--surface)', 'stroke-width': 2 }));
+    const last = data[data.length - 1];
+    el('text', { x: x(last.step) + 12, y: y(last[s.key]) + 5, style: 'font-weight:600' }, s.name);
+  });
+  // hover: crosshair + tooltip per integration
+  const tip = document.getElementById('tooltip');
+  const cross = el('line', { x1: 0, x2: 0, y1: m.t, y2: H - m.b, stroke: 'var(--muted)', 'stroke-dasharray': '3 3', opacity: 0 });
+  data.forEach((d) => {
+    const hit = el('rect', {
+      x: x(d.step) - 40, y: m.t, width: 80, height: H - m.t - m.b, fill: 'transparent', tabindex: 0,
+      'aria-label': `Integration ${d.step}: without KG ${d.off} mistakes, with KG ${d.on}`,
+    });
+    const showTip = () => {
+      cross.setAttribute('x1', x(d.step)); cross.setAttribute('x2', x(d.step)); cross.setAttribute('opacity', 1);
+      tip.innerHTML = `<strong>Integration #${d.step}</strong><br>Without KG: ${d.off.toFixed(2)}<br>With KG: ${d.on.toFixed(2)}`;
+      const box = svg.getBoundingClientRect(), wrap = svg.parentElement.getBoundingClientRect();
+      const px = (x(d.step) / W) * box.width + (box.left - wrap.left);
+      tip.style.left = `${Math.min(px + 12, box.width - 150)}px`;
+      tip.style.top = '10px';
+      tip.style.opacity = 1;
+    };
+    const hideTip = () => { tip.style.opacity = 0; cross.setAttribute('opacity', 0); };
+    hit.addEventListener('mouseenter', showTip); hit.addEventListener('focus', showTip);
+    hit.addEventListener('mouseleave', hideTip); hit.addEventListener('blur', hideTip);
+  });
+  // table view
+  const tbody = document.querySelector('#convTable tbody');
+  data.forEach((d) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>#${d.step}</td><td class="num">${d.off.toFixed(2)}</td><td class="num">${d.on.toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+  });
+  const toggle = document.getElementById('tableToggle');
+  toggle.addEventListener('click', () => {
+    const table = document.getElementById('convTable');
+    const showTable = table.hidden;
+    table.hidden = !showTable;
+    document.getElementById('chartWrap').hidden = showTable;
+    toggle.textContent = showTable ? 'Show chart' : 'Show table';
+  });
+})();
+</script>
+</body>
+</html>
