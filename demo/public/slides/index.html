@@ -28,6 +28,9 @@
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --grid: #e4e2dc;
+  --teal: #1f8a7a;
+  --banner: #1f2a36;
+  --gap-accent: #e8a23a;
   --shadow: 0 10px 40px rgba(0, 0, 0, .10);
 }
 @media (prefers-color-scheme: dark) {
@@ -50,6 +53,9 @@
     --series-1: #3987e5;
     --series-2: #d95926;
     --grid: #2c2b28;
+    --teal: #23917f;
+    --banner: #26323f;
+    --gap-accent: #e8a23a;
     --shadow: 0 10px 40px rgba(0, 0, 0, .5);
   }
 }
@@ -72,6 +78,9 @@
   --series-1: #3987e5;
   --series-2: #d95926;
   --grid: #2c2b28;
+  --teal: #23917f;
+  --banner: #26323f;
+  --gap-accent: #e8a23a;
   --shadow: 0 10px 40px rgba(0, 0, 0, .5);
 }
 
@@ -147,6 +156,21 @@ strong { color: var(--text); }
   font-size: 23px; line-height: 1.45; color: var(--text); font-style: italic;
   border-left: 4px solid var(--accent); padding: 6px 0 6px 20px; margin: 4px 0 0;
 }
+
+
+/* literature review (slide 3) */
+.lit-sub { font-size: 20px; font-style: italic; color: var(--text-2); margin: -8px 0 20px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.lit-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 18px 18px 14px; }
+.lit-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--teal); display: grid; place-items: center; margin-bottom: 10px; }
+.lit-icon svg { width: 26px; height: 26px; }
+.lit-card h3 { font-size: 20px; line-height: 1.2; margin: 0 0 8px; min-height: 48px; }
+.lit-card ul { padding-left: 18px; }
+.lit-card li { font-size: 16px; line-height: 1.3; margin: 0 0 2px; color: var(--text); }
+.lit-cite { display: block; font-size: 12.5px; font-style: italic; color: var(--muted); margin: 2px 0 9px -18px; }
+.gap-banner { margin-top: 16px; background: var(--banner); color: #f5f4f0; border-radius: 14px; padding: 14px 22px; display: flex; align-items: center; gap: 18px; font-size: 18px; line-height: 1.4; }
+.gap-banner .target { flex: 0 0 46px; height: 46px; border-radius: 50%; background: var(--gap-accent); display: grid; place-items: center; }
+.gap-banner b { color: var(--gap-accent); }
 
 /* flows */
 .flow { display: flex; align-items: stretch; gap: 0; }
@@ -234,7 +258,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   h1, .title-slide h1, .divider h1 { font-size: 32px; }
   h2 { font-size: 26px; }
   p, li, .lead, .quote { font-size: 17px; }
-  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .grid2, .grid3, .grid4 { grid-template-columns: 1fr; }
+  .lit-card h3 { min-height: 0; }
+  .gap-banner { font-size: 16px; }
+  .lit-sub { font-size: 17px; margin-top: 0; }
   .flow { flex-direction: column; }
   .arrow { width: auto; height: 22px; transform: rotate(90deg); }
   .seq { grid-template-columns: 1fr; }
@@ -303,7 +330,50 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   <div class="foot"><span>Paper: Introduction</span><span>2</span></div>
 </section>
 
-<!-- 3. Why now -->
+
+<!-- 3. Literature review (author-provided slide, text verbatim) -->
+<section class="slide" aria-label="Literature review">
+  <h2 style="margin-bottom:14px">Literature Review</h2>
+  <p class="lit-sub">Four research streams converge on PMAIP — but none addresses end-user-facing integration for platform product management</p>
+  <div class="grid4">
+  <div class="lit-card"><div class="lit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v5M15 2v5"/><path d="M6 7h12v4a6 6 0 0 1-12 0z" fill="#fff"/><path d="M12 17v5"/></svg></div>
+    <h3>Enterprise API Integration</h3>
+    <ul>
+      <li>Platform strategy drives SaaS value<span class="lit-cite">Gawer &amp; Cusumano, 2002</span></li>
+      <li>Integration demands deep expertise and upkeep<span class="lit-cite">Hai &amp; Sakoda, 2009; Kiran, 2025</span></li>
+      <li>APIs built for humans must adapt to agentic workflows<span class="lit-cite">Ponnusamy et al., 2025</span></li>
+    </ul>
+  </div>
+  <div class="lit-card"><div class="lit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="11" rx="2" fill="#fff"/><path d="M12 4v4M3 13v3M21 13v3"/><circle cx="12" cy="3.5" r="1" fill="#fff"/><circle cx="9.5" cy="13" r="1.2" fill="#1f8a7a" stroke="none"/><circle cx="14.5" cy="13" r="1.2" fill="#1f8a7a" stroke="none"/></svg></div>
+    <h3>Multiagent Systems &amp; Agentic AI</h3>
+    <ul>
+      <li>Taxonomy: perception, planning, action, tool use<span class="lit-cite">Sapkota et al., 2026</span></li>
+      <li>Orchestrated enterprise multiagent architectures<span class="lit-cite">Wu, Y. et al., 2026; Hong et al., 2024</span></li>
+      <li>LLMs shift from code generators to autonomous agents<span class="lit-cite">Ren et al., 2025; Gu et al., 2025</span></li>
+    </ul>
+  </div>
+  <div class="lit-card"><div class="lit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="5" height="5" rx="1" fill="#fff"/><rect x="16" y="4" width="5" height="5" rx="1" fill="#fff"/><rect x="9.5" y="15" width="5" height="5" rx="1" fill="#fff"/><path d="M8 6.5h8M6 9l5 6"/></svg></div>
+    <h3>Knowledge Graphs</h3>
+    <ul>
+      <li>Encode semantic business-logic relationships<span class="lit-cite">Hogan et al., 2021; Chen et al., 2020</span></li>
+      <li>GraphRAG improves LLM reasoning and retrieval<span class="lit-cite">Peng et al., 2025; Edge et al., 2025</span></li>
+      <li>LLMs reshape ontology and KG construction<span class="lit-cite">Li, 2026; Bi, 2025; Nie &amp; Zhang, 2025</span></li>
+    </ul>
+  </div>
+  <div class="lit-card"><div class="lit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="5" rx="1" fill="#fff"/><rect x="3" y="16" width="6" height="5" rx="1" fill="#fff"/><rect x="15" y="16" width="6" height="5" rx="1" fill="#fff"/><path d="M12 8v4M6 16v-4h12v4"/></svg></div>
+    <h3>Model Context Protocol</h3>
+    <ul>
+      <li>Simpler development, wider tool access<span class="lit-cite">MCP, 2024; Luo, 2025; Hou, 2025</span></li>
+      <li>Fast growth: 1,899 servers studied<span class="lit-cite">Wu, X. et al., 2025; Falk et al., 2025</span></li>
+      <li>Gaps in identity, errors, security<span class="lit-cite">Liu et al., 2026; Song et al., 2026</span></li>
+    </ul>
+  </div>
+  </div>
+  <div class="gap-banner"><div class="target" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="#fff"/></svg></div><div><b>Research gap:</b> Little work sits at the intersection of end-user-facing integration, platform product management, and agentic AI — motivating PMAIP.</div></div>
+  <div class="foot"><span>Yadav, Kumar &amp; Joglekar — Agentic integration of platform APIs for digital product management (DSI)</span><span>3</span></div>
+</section>
+
+<!-- 4. Why now -->
 <section class="slide" aria-label="Why now">
   <p class="kicker">Why now</p>
   <h2>Three technologies make a different approach viable</h2>
@@ -313,7 +383,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="card bar-l mcp"><span class="tag mcp">Model Context Protocol</span><h3 style="margin-top:12px">Standard tool access</h3><p>Plug-and-play agent access to APIs, with context carried across sessions. REST APIs can be wrapped as MCP tools automatically.</p></div>
   </div>
   <p class="small" style="margin-top:18px">Thousands of MCP servers were deployed by 2025, and enterprise-grade agentic frameworks matured, which makes multiagent integration practical at scale.</p>
-  <div class="foot"><span>Paper: Introduction; Literature review</span><span>3</span></div>
+  <div class="foot"><span>Paper: Introduction; Literature review</span><span>4</span></div>
 </section>
 
 <!-- 4. Intent-centric -->
@@ -326,7 +396,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="card"><h3>Semantic compression</h3><p>No translation through technical intermediaries. Requirements stay in the business's native vocabulary.</p></div>
     <div class="card"><h3>Parallel agents</h3><p>Multiple agent instances work on different parts of the request at the same time (Fig. 1), instead of a sequential hand-off chain.</p></div>
   </div>
-  <div class="foot"><span>Paper: Fig. 1, intent-centric process</span><span>4</span></div>
+  <div class="foot"><span>Paper: Fig. 1, intent-centric process</span><span>5</span></div>
 </section>
 
 <!-- 5. Architecture -->
@@ -339,7 +409,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="card bar-l mcp"><span class="tag mcp">MCP agent</span><h3 style="margin-top:12px">Connects &amp; deploys</h3><ul><li>Tests API connectivity</li><li>Deploys and tests against live endpoints</li><li>Standard interfaces, no per-tool plumbing</li></ul></div>
   </div>
   <p class="small" style="margin-top:20px">Workflow: (1) accept intent and start a conversation → (2) query the KG with the conversation and history → (3) generate and test code → (4) return results with options to refine.</p>
-  <div class="foot"><span>Paper: System architecture; Implementation</span><span>5</span></div>
+  <div class="foot"><span>Paper: System architecture; Implementation</span><span>6</span></div>
 </section>
 
 <!-- 6. Fig 2 / 3 -->
@@ -375,7 +445,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     <div data-who="KG agent" class="msg">Learns for next time</div>
     <div data-who="MCP agent" class="msg">Deploys the final configuration</div>
   </div>
-  <div class="foot"><span>Paper: Fig. 2 and Fig. 3</span><span>6</span></div>
+  <div class="foot"><span>Paper: Fig. 2 and Fig. 3</span><span>7</span></div>
 </section>
 
 <!-- 7. KG -->
@@ -392,7 +462,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
       <div class="card"><h3>In a company, that means…</h3><ul><li>"Our ERP wants the <em>legal</em> company name"</li><li>"Never sync the sales rep; the ERP assigns it"</li><li>"<code>UDF_07</code> is our sales region"</li></ul></div>
     </div>
   </div>
-  <div class="foot"><span>Paper: Knowledge graph component; Findings</span><span>7</span></div>
+  <div class="foot"><span>Paper: Knowledge graph component; Findings</span><span>8</span></div>
 </section>
 
 <!-- 8. Findings: capability -->
@@ -407,7 +477,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     </div>
   </div>
   <p class="cite" style="margin-top:16px">Based on the authors' experience and conversations with product managers (a convenience sample).</p>
-  <div class="foot"><span>Paper: Findings, capability redistribution</span><span>8</span></div>
+  <div class="foot"><span>Paper: Findings, capability redistribution</span><span>9</span></div>
 </section>
 
 <!-- 9. Competitive dynamics -->
@@ -424,7 +494,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
       <tr><td><strong>Collaborative innovation</strong></td><td>End users and the platform build together</td></tr>
     </tbody>
   </table>
-  <div class="foot"><span>Paper: Competitive dynamics</span><span>9</span></div>
+  <div class="foot"><span>Paper: Competitive dynamics</span><span>10</span></div>
 </section>
 
 <!-- 10. Divider -->
@@ -433,7 +503,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   <h1>The demo: a self-improving knowledge graph</h1>
   <p class="lead">Two loops. One a PM starts with an intent; one the agent starts on its own when a vendor ships a new API. Then: what we measured.</p>
   <p style="margin-top:20px"><a href="../" target="_blank" rel="noopener">Open the live click-through demo ↗</a></p>
-  <div class="foot"><span>Generic product names throughout</span><span>10</span></div>
+  <div class="foot"><span>Generic product names throughout</span><span>11</span></div>
 </section>
 
 <!-- 11. Cast -->
@@ -456,7 +526,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
       </table>
     </div>
   </div>
-  <div class="foot"><span>Demo: setup</span><span>11</span></div>
+  <div class="foot"><span>Demo: setup</span><span>12</span></div>
 </section>
 
 <!-- 12. Loop 1 -->
@@ -475,7 +545,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="step"><b>Ship</b>sandbox → staging → canary → production, health-checked</div>
   </div>
   <div class="card bar-l kg" style="margin-top:26px"><h3>Then the KG learns</h3><p>A reusable <strong>CRM → billing pattern</strong> and the engineer's <strong>3 corrections as rules</strong>, available to every future integration of this company.</p></div>
-  <div class="foot"><span>Demo: Loop 1</span><span>12</span></div>
+  <div class="foot"><span>Demo: Loop 1</span><span>13</span></div>
 </section>
 
 <!-- 13. Loop 2 -->
@@ -497,7 +567,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="stat"><div class="v">7 / 9</div><div class="l">mappings reused from what the engineer taught it in Loop 1</div></div>
     <div class="stat"><div class="v">0 / 9</div><div class="l">reused when KG learning is switched off (the ablation): the same corrections are needed again</div></div>
   </div>
-  <div class="foot"><span>Demo: Loop 2 · paper: "as APIs evolve", compound advantage</span><span>13</span></div>
+  <div class="foot"><span>Demo: Loop 2 · paper: "as APIs evolve", compound advantage</span><span>14</span></div>
 </section>
 
 <!-- 14. Platform -->
@@ -510,7 +580,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="card"><h3>Safe delivery</h3><ul><li>Staged deploys with real health checks</li><li>Automatic rollback on a vendor outage</li><li>Metrics, alerts, dashboards</li></ul></div>
   </div>
   <p style="margin-top:22px">The paper's limitations section asks for <strong>"methods for measuring the compound advantage."</strong> So we built an evaluation suite: 72 generated cases, 19 hand-labeled realistic cases, and a pre-registered company-conventions experiment.</p>
-  <div class="foot"><span>Repo: app/platform · app/platform/evals</span><span>14</span></div>
+  <div class="foot"><span>Repo: app/platform · app/platform/evals</span><span>15</span></div>
 </section>
 
 <!-- 15. Evidence 1 -->
@@ -526,7 +596,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="card"><h3>But: the KG adds nothing here</h3><p>On fields whose meaning is public knowledge, KG on vs off showed <strong>no measurable difference</strong>. There was nothing left to fix.</p></div>
   </div>
   <p class="cite" style="margin-top:14px">claude-opus-5-5; 19 cases, 318 labeled target fields; synthetic suite: 45.7% → 99.9% F1. Reports in reports/evals/live/.</p>
-  <div class="foot"><span>Evidence: live LLM evals</span><span>15</span></div>
+  <div class="foot"><span>Evidence: live LLM evals</span><span>16</span></div>
 </section>
 
 <!-- 16. Evidence 2 (chart) -->
@@ -557,7 +627,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
       <div class="card"><p style="margin:0">4 fictional companies × 5 CRM integrations into their ERP. 6 house rules per company (legal vs display name, tax in or out, leave sales rep empty, what <code>UDF_07</code> means…), balanced so <strong>no default guess works</strong>. Fields Claude already knew: 0 errors either way.</p></div>
     </div>
   </div>
-  <div class="foot"><span>3 replicates · design committed before the run · app/platform/evals/conventions.py</span><span>16</span></div>
+  <div class="foot"><span>3 replicates · design committed before the run · app/platform/evals/conventions.py</span><span>17</span></div>
 </section>
 
 <!-- 17. Claims -->
@@ -574,7 +644,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
       <tr><td>Agents act as APIs evolve</td><td class="yes">Demonstrated</td><td>The agent diffs a new release, flags deprecations and drafts the unblocked roadmap item</td></tr>
     </tbody>
   </table>
-  <div class="foot"><span>Synthesis</span><span>17</span></div>
+  <div class="foot"><span>Synthesis</span><span>18</span></div>
 </section>
 
 <!-- 18. Limitations -->
@@ -595,7 +665,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
       <li>Connect real vendor sandboxes</li>
     </ul></div>
   </div>
-  <div class="foot"><span>Paper: Limitations · repo README: Limitations</span><span>18</span></div>
+  <div class="foot"><span>Paper: Limitations · repo README: Limitations</span><span>19</span></div>
 </section>
 
 <!-- 19. Try it -->
@@ -608,7 +678,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="card"><h3>5-minute walkthrough</h3><p class="mono" style="font-size:15px">pip install -r requirements-platform.txt<br>python -m app.platform.quickstart</p></div>
   </div>
   <p class="authors" style="margin-top:30px">Shiv Yadav · Anshul Kumar · Nitin Joglekar · DSI 2026</p>
-  <div class="foot"><span>Thank you</span><span>19</span></div>
+  <div class="foot"><span>Thank you</span><span>20</span></div>
 </section>
 
 </div>
@@ -616,7 +686,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 <nav class="nav" aria-label="Slide navigation">
   <button type="button" id="prev" aria-label="Previous slide">←</button>
-  <span id="counter" aria-live="polite">1 / 19</span>
+  <span id="counter" aria-live="polite">1 / 20</span>
   <button type="button" id="next" aria-label="Next slide">→</button>
   <button type="button" id="theme" aria-label="Toggle light or dark theme">Theme</button>
 </nav>
