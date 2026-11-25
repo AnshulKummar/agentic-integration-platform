@@ -2,14 +2,35 @@
 
 **An AI agent that builds, ships and maintains your SaaS integrations, and remembers how *your* company does things.**
 
-[Paper overview slides](https://anshulkummar.github.io/agentic-integration-platform/slides/) · [Live click-through demo](https://anshulkummar.github.io/agentic-integration-platform/) · [Try it in 5 minutes](#try-it-in-5-minutes) · [Use it as a framework](#use-it-as-a-framework) · [Technical details](#technical-details-for-engineers)
+[Paper (PDF)](docs/paper/PMAIP_DSI2026_paper.pdf) · [DSI 2026 presentation](#dsi-2026-presentation) · [Paper overview slides](https://anshulkummar.github.io/agentic-integration-platform/slides/) · [Live click-through demo](https://anshulkummar.github.io/agentic-integration-platform/) · [Try it in 5 minutes](#try-it-in-5-minutes) · [Use it as a framework](#use-it-as-a-framework) · [Technical details](#technical-details-for-engineers)
 
 This repository accompanies the paper *Agentic integration of platform APIs for digital product management* (PMAIP), by Shiv Yadav, Anshul Kumar and Nitin Joglekar (DSI 2026). It contains:
 
+- the [paper as a PDF](docs/paper/PMAIP_DSI2026_paper.pdf);
 - a [click-through presentation](https://anshulkummar.github.io/agentic-integration-platform/slides/) of the paper, the KG demo and the measured results (use ← / →; it also works on phones);
 - the clickable demo shown at the conference;
 - a working, multi-tenant platform that implements the paper's ideas end to end;
 - the evaluation data behind every number below.
+
+---
+
+## DSI 2026 presentation
+
+Presented at the **Decision Sciences Institute (DSI) Annual Conference 2026**, San Francisco.
+
+| | |
+|---|---|
+| **Title in the program** | *Intent Centric Design: Agentic Integration of Customer Voice into Platform Capabilities using LLMs* |
+| **Paper** | *Agentic integration of platform APIs for digital product management* ([PDF](docs/paper/PMAIP_DSI2026_paper.pdf)) |
+| **Authors** | Shiv Yadav (Duetto Inc.), Anshul Kumar (Paylocity Inc), Nitin Joglekar (Villanova University) |
+| **Session** | INNOVATION and NEW PRODUCT DEVELOPMENT: Innovations in AI, Data, and Customer Management |
+| **When** | Monday, November 23, 2026, 10:00–11:30am (local time) |
+| **Where** | San Francisco Marriott Marquis, 2nd Floor, Foothill D |
+| **Program listing** | [DSI 2026 online program: paper and abstract](https://convention2.allacademic.com/one/dsi/dsi26/index.php?program_focus=view_paper&selected_paper_id=2364747&cmd=online_program_direct_link&sub_action=online_program) |
+| **Slides** | [Paper overview slides](https://anshulkummar.github.io/agentic-integration-platform/slides/) |
+| **Demo** | [Live click-through demo](https://anshulkummar.github.io/agentic-integration-platform/) |
+
+The paper reflects the authors' own views and was conducted outside the scope of their employment; it does not represent the policies or research of their employers.
 
 ---
 
@@ -220,6 +241,7 @@ flowchart LR
 | `app/platform/quickstart.py` | The 5-minute walkthrough (also run as a test). |
 | `app/demo/` | Domain logic shared with the conference demo: schema alignment, mapping drafter, KG learning, OpenAPI diff. |
 | `demo/` | The click-through UI (React + Vite) and the slides (`demo/public/slides/`), deployed to GitHub Pages. |
+| `docs/paper/` | The DSI 2026 paper as a PDF. |
 | `deploy/` | Prometheus, Alertmanager, Grafana and Postgres role setup. |
 | `reports/evals/` | Every eval report behind the numbers above. |
 | `app/api`, `app/services`, `frontend/`, … | The upstream project this was forked from (see [Origins](#origins)); not used by the platform. |
